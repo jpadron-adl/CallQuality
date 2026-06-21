@@ -1,15 +1,14 @@
 import { DomainError } from '@domain/shared/DomainError';
+import { ValueObject } from '@domain/shared/ValueObject';
 
 /**
  * Value Object que representa la puntuación global de calidad de una auditoría.
  * Invariante: entero comprendido en el rango cerrado [0, 100].
  * Inmutable y con igualdad por valor.
  */
-export class PuntuacionCalidad {
+export class PuntuacionCalidad extends ValueObject<number> {
   private static readonly MINIMO = 0;
   private static readonly MAXIMO = 100;
-
-  private constructor(private readonly _valor: number) {}
 
   static crear(valor: number): PuntuacionCalidad {
     if (!Number.isInteger(valor)) {
@@ -23,13 +22,5 @@ export class PuntuacionCalidad {
       );
     }
     return new PuntuacionCalidad(valor);
-  }
-
-  get valor(): number {
-    return this._valor;
-  }
-
-  esIgualA(otra: PuntuacionCalidad): boolean {
-    return this._valor === otra._valor;
   }
 }
