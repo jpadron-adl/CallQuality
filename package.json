@@ -1,0 +1,19 @@
+{
+  "name": "callquality",
+  "version": "0.1.0",
+  "description": "Sistema Automatizado de Auditoría de Calidad y Cumplimiento para Call Centers basado en IA",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "lint": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
