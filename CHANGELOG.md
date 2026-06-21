@@ -7,6 +7,17 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-21
+
+### Added
+- Capa de aplicación: caso de uso `AuditarLlamada` que orquesta repositorios y servicio de IA contra interfaces, con su error `LlamadaNoEncontradaError`.
+- Puerto `GeneradorId` para aislar la generación de identificadores no deterministas.
+- Infraestructura del Modo Demo (`APP_MODE=demo`), ejecutable sin API keys:
+  - `MockAnalisisService`: análisis determinista por palabras clave.
+  - Repositorios en memoria de llamadas y auditorías, y `GeneradorIdUuid`.
+  - `CargadorLlamadasSinteticas` con validación Zod y datos sintéticos de ejemplo.
+  - Composite Root `construirContexto` con selección de adaptadores por `APP_MODE` y punto de entrada `main.ts`.
+
 ## [0.2.0] - 2026-06-21
 
 ### Added
