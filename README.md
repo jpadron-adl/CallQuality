@@ -2,7 +2,7 @@
 
 **Sistema Automatizado de Auditoría de Calidad y Cumplimiento para Call Centers.**
 
-Trabajo de Fin de Máster (TFM). El sistema procesa transcripciones de llamadas entre
+El sistema procesa transcripciones de llamadas entre
 clientes y agentes, audita el cumplimiento de los protocolos de la empresa (saludo,
 validación de identidad, oferta obligatoria, lenguaje adecuado, despedida) y detecta
 alertas de cumplimiento (fraude, queja grave, amenaza, lenguaje ofensivo) apoyándose
