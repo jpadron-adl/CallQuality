@@ -1,0 +1,38 @@
+[
+  {
+    "id": "llamada-001",
+    "agenteId": "agente-007",
+    "fechaInicio": "2026-06-21T09:15:00.000Z",
+    "transcripcion": [
+      { "rol": "AGENTE", "texto": "Buenos días, le atiende Ana en el servicio de atención al cliente." },
+      { "rol": "CLIENTE", "texto": "Hola, llamo por una duda con mi factura." },
+      { "rol": "AGENTE", "texto": "Por seguridad, ¿puede confirmarme su DNI y su número de cliente?" },
+      { "rol": "CLIENTE", "texto": "Sí, claro, mi número de cliente es 482915." },
+      { "rol": "AGENTE", "texto": "Gracias. Además, le ofrezco una promoción con un descuento del 10% en su tarifa." },
+      { "rol": "CLIENTE", "texto": "Perfecto, me interesa." },
+      { "rol": "AGENTE", "texto": "Estupendo. Que tenga un buen día y gracias por su llamada." }
+    ]
+  },
+  {
+    "id": "llamada-002",
+    "agenteId": "agente-014",
+    "fechaInicio": "2026-06-21T11:40:00.000Z",
+    "transcripcion": [
+      { "rol": "AGENTE", "texto": "Dígame qué necesita." },
+      { "rol": "CLIENTE", "texto": "Llevo tres semanas con un cargo no reconocido y nadie lo soluciona. Esto es una estafa." },
+      { "rol": "CLIENTE", "texto": "Si no me lo arreglan hoy, les voy a denunciar y hablaré con mi abogado." },
+      { "rol": "AGENTE", "texto": "No puedo hacer nada con eso." }
+    ]
+  },
+  {
+    "id": "llamada-003",
+    "agenteId": "agente-007",
+    "fechaInicio": "2026-06-21T14:05:00.000Z",
+    "transcripcion": [
+      { "rol": "AGENTE", "texto": "Buenas tardes, ¿en qué puedo ayudarle?" },
+      { "rol": "CLIENTE", "texto": "Quiero poner una reclamación por el tiempo de espera." },
+      { "rol": "AGENTE", "texto": "Lamento las molestias, tomo nota de su queja." },
+      { "rol": "AGENTE", "texto": "Hasta luego, gracias por contactarnos." }
+    ]
+  }
+]
