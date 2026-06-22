@@ -7,6 +7,16 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-22
+
+### Added
+- Capa de entrada HTTP (API) que expone los casos de uso para el dashboard del profesor, en `src/infrastructure/web/`:
+  - Presentadores puros (`presentarLlamada`, `presentarResultadoAuditoria`) que serializan el dominio a DTOs planos, sin exponer value objects.
+  - Contrato HTTP agnóstico del servidor (`PeticionHttp`/`RespuestaHttp`).
+  - Router `ApiAuditoria` (testeable en memoria) con las rutas `GET /api/llamadas`, `POST /api/llamadas/:id/auditorias` y `GET /api/llamadas/:id/auditorias`, que mapea los errores de aplicación a códigos HTTP (404, 405).
+  - Adaptador de borde `ServidorHttp` sobre el módulo `node:http` nativo (sin frameworks externos), con CORS habilitado y puerto configurable.
+- Punto de entrada `src/main-api.ts` y script `dev:api` para levantar el servidor de la API.
+
 ## [0.4.0] - 2026-06-22
 
 ### Added
