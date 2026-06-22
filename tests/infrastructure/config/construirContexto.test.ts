@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { construirContexto } from '@infrastructure/config/construirContexto';
 import { leerConfig } from '@infrastructure/config/AppConfig';
 import { ConfiguracionInvalidaError } from '@infrastructure/config/ConfiguracionInvalidaError';
-import { AdaptadorNoDisponibleError } from '@infrastructure/config/AdaptadorNoDisponibleError';
 import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 
 describe('leerConfig', () => {
@@ -11,11 +10,35 @@ describe('leerConfig', () => {
   });
 
   it('lee el modo desde APP_MODE', () => {
-    expect(leerConfig({ APP_MODE: 'production' }).modo).toBe('production');
+    expect(leerConfig({ APP_MODE: 'production', OPENAI_API_KEY: 'sk-test' }).modo).toBe('production');
   });
 
   it('rechaza un APP_MODE no reconocido', () => {
     expect(() => leerConfig({ APP_MODE: 'staging' })).toThrow(ConfiguracionInvalidaError);
+  });
+
+  it('no expone configuración de OpenAI en modo demo', () => {
+    expect(leerConfig({ APP_MODE: 'demo' }).openai).toBeUndefined();
+  });
+
+  it('lee la API key y el modelo de OpenAI en modo producción', () => {
+    const config = leerConfig({
+      APP_MODE: 'production',
+      OPENAI_API_KEY: 'sk-test',
+      OPENAI_MODEL: 'gpt-4o',
+    });
+    expect(config.openai?.apiKey).toBe('sk-test');
+    expect(config.openai?.modelo).toBe('gpt-4o');
+  });
+
+  it('aplica un modelo por defecto cuando OPENAI_MODEL no está definido en producción', () => {
+    const config = leerConfig({ APP_MODE: 'production', OPENAI_API_KEY: 'sk-test' });
+    expect(config.openai?.modelo).toBeDefined();
+    expect(config.openai?.modelo.length).toBeGreaterThan(0);
+  });
+
+  it('rechaza el modo producción sin OPENAI_API_KEY', () => {
+    expect(() => leerConfig({ APP_MODE: 'production' })).toThrow(ConfiguracionInvalidaError);
   });
 });
 
@@ -39,7 +62,13 @@ describe('construirContexto', () => {
     expect(resultado.tieneAlertas()).toBe(true);
   });
 
-  it('en modo production indica que el adaptador real aún no está disponible', () => {
-    expect(() => construirContexto({ modo: 'production' })).toThrow(AdaptadorNoDisponibleError);
+  it('en modo production ensambla el contexto con el adaptador de IA real', () => {
+    const contexto = construirContexto({
+      modo: 'production',
+      openai: { apiKey: 'sk-test', modelo: 'gpt-4o-mini' },
+    });
+    expect(contexto.auditarLlamada).toBeDefined();
+    expect(contexto.llamadas).toBeDefined();
+    expect(contexto.auditorias).toBeDefined();
   });
 });
