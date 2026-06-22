@@ -6,3 +6,8 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Herramientas locales del agente (no forman parte del proyecto)
+CLAUDE.md
+.engram
+.claude/
