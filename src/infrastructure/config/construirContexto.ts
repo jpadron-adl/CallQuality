@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { AppConfig } from '@infrastructure/config/AppConfig';
-import { AdaptadorNoDisponibleError } from '@infrastructure/config/AdaptadorNoDisponibleError';
+import type { AnalisisIaService } from '@domain/auditoria/ports/AnalisisIaService';
 import type { LlamadaRepository } from '@domain/llamada/ports/LlamadaRepository';
 import type { AuditoriaRepository } from '@domain/auditoria/ports/AuditoriaRepository';
 import { AuditarLlamada } from '@application/use-cases/AuditarLlamada';
 import { MockAnalisisService } from '@infrastructure/ia/MockAnalisisService';
+import { OpenAiAnalisisService } from '@infrastructure/ia/openai/OpenAiAnalisisService';
+import { OpenAiChatCompletions } from '@infrastructure/ia/openai/OpenAiChatCompletions';
 import { LlamadaRepositoryEnMemoria } from '@infrastructure/persistence/LlamadaRepositoryEnMemoria';
 import { AuditoriaRepositoryEnMemoria } from '@infrastructure/persistence/AuditoriaRepositoryEnMemoria';
 import { GeneradorIdUuid } from '@infrastructure/id/GeneradorIdUuid';
@@ -29,13 +31,9 @@ const RUTA_DATOS_DEMO = fileURLToPath(new URL('../data/llamadas-demo.json', impo
  * lugar donde se eligen los adaptadores concretos.
  */
 export function construirContexto(config: AppConfig): ContextoAplicacion {
-  if (config.modo === 'production') {
-    throw new AdaptadorNoDisponibleError(
-      'El adaptador de análisis por IA en modo producción (SDK de OpenAI) aún no está implementado.',
-    );
-  }
-
-  // Modo demo: todo en memoria, sin API keys.
+  // El servicio de análisis es lo único que cambia según el modo. La persistencia
+  // real es un hito posterior; por ahora ambos modos se siembran con las llamadas
+  // sintéticas en memoria, de modo que el flujo es ejecutable de extremo a extremo.
   const datosCrudos: unknown = JSON.parse(readFileSync(RUTA_DATOS_DEMO, 'utf-8'));
   const llamadasSinteticas = new CargadorLlamadasSinteticas().mapear(datosCrudos);
 
@@ -43,10 +41,19 @@ export function construirContexto(config: AppConfig): ContextoAplicacion {
   const auditorias = new AuditoriaRepositoryEnMemoria();
   const auditarLlamada = new AuditarLlamada(
     llamadas,
-    new MockAnalisisService(),
+    construirAnalisis(config),
     auditorias,
     new GeneradorIdUuid(),
   );
 
   return { auditarLlamada, llamadas, auditorias };
+}
+
+/** Selecciona el adaptador de análisis concreto según el modo de operación. */
+function construirAnalisis(config: AppConfig): AnalisisIaService {
+  if (config.modo === 'production') {
+    // leerConfig garantiza la presencia de openai en modo producción.
+    return new OpenAiAnalisisService(new OpenAiChatCompletions(config.openai!));
+  }
+  return new MockAnalisisService();
 }
