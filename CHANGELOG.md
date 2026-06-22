@@ -7,6 +7,21 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-22
+
+### Added
+- Infraestructura del Modo Producción (`APP_MODE=production`) con análisis semántico por LLM:
+  - `OpenAiAnalisisService`: adaptador que construye el prompt, valida la respuesta cruda del LLM con Zod (`respuestaAnalisisSchema`) y la traduce a value objects del dominio.
+  - Puerto fino `ClienteChatCompletions` que aísla el SDK del proveedor, y su adaptador de borde `OpenAiChatCompletions` sobre el SDK oficial de OpenAI (salida forzada a JSON con `response_format`).
+  - `RespuestaIaInvalidaError`: error de infraestructura que neutraliza el no-determinismo del LLM (respuestas no-JSON, fuera de esquema o con valores ajenos a los catálogos del dominio).
+- `leerConfig` resuelve la configuración de OpenAI en modo producción: exige `OPENAI_API_KEY` y resuelve `OPENAI_MODEL` (con valor por defecto).
+
+### Changed
+- El Composite Root `construirContexto` selecciona el adaptador de análisis según `APP_MODE` (mock en demo, OpenAI en producción), compartiendo la siembra de llamadas en memoria entre ambos modos.
+
+### Dependencies
+- Añadida la dependencia `openai` (SDK oficial) para el cliente de IA en modo producción.
+
 ## [0.3.0] - 2026-06-21
 
 ### Added
