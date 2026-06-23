@@ -7,6 +7,11 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-06-23
+
+### Fixed
+- La vista de detalle (`DetalleAuditoria`) no mostraba la fecha en que se realizó la auditoría. Ahora la indica junto a la puntuación, de modo que la fecha es visible tanto al auditar como al expandir una auditoría del historial.
+
 ## [0.9.0] - 2026-06-23
 
 ### Added
