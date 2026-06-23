@@ -16,7 +16,11 @@ type PanelDerecho =
   | { readonly tipo: 'vacio' }
   | { readonly tipo: 'cargando-historial' }
   | { readonly tipo: 'resultado'; readonly resultado: ResultadoAuditoriaDto }
-  | { readonly tipo: 'historial'; readonly auditorias: readonly ResultadoAuditoriaDto[] };
+  | {
+      readonly tipo: 'historial';
+      readonly llamadaId: string;
+      readonly auditorias: readonly ResultadoAuditoriaDto[];
+    };
 
 /** Traduce cualquier fallo en un mensaje legible para el profesor. */
 function mensajeDeError(error: unknown): string {
@@ -24,15 +28,27 @@ function mensajeDeError(error: unknown): string {
   return 'No se ha podido contactar con la API de auditoría.';
 }
 
+interface AccionesPanel {
+  readonly onReauditar: (llamadaId: string) => void;
+  readonly reauditando: boolean;
+}
+
 /** Renderiza el contenido del panel de detalle según su estado. */
-function renderizarPanel(panel: PanelDerecho): React.JSX.Element {
+function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JSX.Element {
   switch (panel.tipo) {
     case 'cargando-historial':
       return <p className="text-sm text-[var(--color-tenue)]">Cargando historial…</p>;
     case 'resultado':
       return <DetalleAuditoria resultado={panel.resultado} />;
     case 'historial':
-      return <HistorialAuditorias auditorias={panel.auditorias} />;
+      return (
+        <HistorialAuditorias
+          auditorias={panel.auditorias}
+          llamadaId={panel.llamadaId}
+          onReauditar={acciones.onReauditar}
+          reauditando={acciones.reauditando}
+        />
+      );
     case 'vacio':
       return (
         <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
@@ -52,6 +68,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
   const [llamadas, setLlamadas] = useState<readonly LlamadaDto[]>([]);
   const [panel, setPanel] = useState<PanelDerecho>({ tipo: 'vacio' });
   const [llamadaEnCurso, setLlamadaEnCurso] = useState<string | null>(null);
+  const [reauditando, setReauditando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,8 +110,22 @@ export function App({ cliente }: AppProps): React.JSX.Element {
       setPanel({ tipo: 'cargando-historial' });
       api
         .listarAuditorias(llamadaId)
-        .then((auditorias) => setPanel({ tipo: 'historial', auditorias }))
+        .then((auditorias) => setPanel({ tipo: 'historial', llamadaId, auditorias }))
         .catch((err: unknown) => setError(mensajeDeError(err)));
+    },
+    [api],
+  );
+
+  const reauditar = useCallback(
+    (llamadaId: string): void => {
+      setReauditando(true);
+      setError(null);
+      api
+        .auditarLlamada(llamadaId)
+        .then(() => api.listarAuditorias(llamadaId))
+        .then((auditorias) => setPanel({ tipo: 'historial', llamadaId, auditorias }))
+        .catch((err: unknown) => setError(mensajeDeError(err)))
+        .finally(() => setReauditando(false));
     },
     [api],
   );
@@ -139,7 +170,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
           <h2 className="text-lg font-medium">
             {panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
           </h2>
-          {renderizarPanel(panel)}
+          {renderizarPanel(panel, { onReauditar: reauditar, reauditando })}
         </section>
       </div>
     </main>

@@ -75,4 +75,16 @@ describe('App', () => {
 
     expect(await screen.findByText(/no tiene auditor[ií]as registradas/i)).toBeInTheDocument();
   });
+
+  it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {
+    const cliente = clienteFalso({ listarAuditorias: vi.fn().mockResolvedValue([RESULTADO]) });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /re-auditar/i }));
+
+    expect(cliente.auditarLlamada).toHaveBeenCalledWith('llamada-1');
+    // Una carga al abrir el historial y otra tras re-auditar para reflejar la nueva pasada.
+    expect(cliente.listarAuditorias).toHaveBeenCalledTimes(2);
+  });
 });
