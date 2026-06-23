@@ -22,6 +22,7 @@ const crearResultado = (overrides: Partial<Parameters<typeof ResultadoAuditoria.
   ResultadoAuditoria.crear({
     id: AuditoriaId.crear('auditoria-001'),
     llamadaId: LlamadaId.crear('llamada-001'),
+    fechaAuditoria: new Date('2026-06-23T12:00:00.000Z'),
     evaluaciones: [
       evaluacion(TipoProtocolo.SALUDO_INICIAL, true),
       evaluacion(TipoProtocolo.DESPEDIDA, false),
@@ -35,6 +36,18 @@ describe('ResultadoAuditoria', () => {
     const resultado = crearResultado();
     expect(resultado.id.valor).toBe('auditoria-001');
     expect(resultado.llamadaId.valor).toBe('llamada-001');
+  });
+
+  it('expone la fecha en que se realizó la auditoría', () => {
+    const resultado = crearResultado({ fechaAuditoria: new Date('2026-06-23T12:00:00.000Z') });
+    expect(resultado.fechaAuditoria.toISOString()).toBe('2026-06-23T12:00:00.000Z');
+  });
+
+  it('es inmutable frente a la fecha: mutar la fecha devuelta no altera el resultado', () => {
+    const resultado = crearResultado();
+    const fecha = resultado.fechaAuditoria;
+    fecha.setFullYear(1999);
+    expect(resultado.fechaAuditoria.getFullYear()).toBe(2026);
   });
 
   it('rechaza una auditoría sin evaluaciones (no se puede puntuar)', () => {

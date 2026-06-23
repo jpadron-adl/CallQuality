@@ -13,6 +13,9 @@ import type { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 export interface DatosResultadoAuditoria {
   readonly id: AuditoriaId;
   readonly llamadaId: LlamadaId;
+  /** Instante en que se realizó la auditoría. Se inyecta como dato (vía el puerto Reloj),
+   * de modo que el dominio permanece puro y determinista (no consulta el reloj del sistema). */
+  readonly fechaAuditoria: Date;
   readonly evaluaciones: EvaluacionProtocolo[];
   readonly alertas: AlertaCumplimiento[];
 }
@@ -27,6 +30,7 @@ export class ResultadoAuditoria {
   private constructor(
     private readonly _id: AuditoriaId,
     private readonly _llamadaId: LlamadaId,
+    private readonly _fechaAuditoria: Date,
     private readonly _evaluaciones: readonly EvaluacionProtocolo[],
     private readonly _alertas: readonly AlertaCumplimiento[],
   ) {}
@@ -37,7 +41,13 @@ export class ResultadoAuditoria {
         'El resultado de auditoría debe contener al menos una evaluación de protocolo para poder puntuarse.',
       );
     }
-    return new ResultadoAuditoria(datos.id, datos.llamadaId, [...datos.evaluaciones], [...datos.alertas]);
+    return new ResultadoAuditoria(
+      datos.id,
+      datos.llamadaId,
+      new Date(datos.fechaAuditoria.getTime()),
+      [...datos.evaluaciones],
+      [...datos.alertas],
+    );
   }
 
   get id(): AuditoriaId {
@@ -46,6 +56,10 @@ export class ResultadoAuditoria {
 
   get llamadaId(): LlamadaId {
     return this._llamadaId;
+  }
+
+  get fechaAuditoria(): Date {
+    return new Date(this._fechaAuditoria.getTime());
   }
 
   get evaluaciones(): EvaluacionProtocolo[] {
