@@ -5,6 +5,7 @@ import type { LlamadaRepository } from '@domain/llamada/ports/LlamadaRepository'
 import type { AuditoriaRepository } from '@domain/auditoria/ports/AuditoriaRepository';
 import type { AnalisisIaService, ResultadoAnalisis } from '@domain/auditoria/ports/AnalisisIaService';
 import type { GeneradorId } from '@domain/shared/ports/GeneradorId';
+import type { Reloj } from '@domain/shared/ports/Reloj';
 import { Llamada } from '@domain/llamada/Llamada';
 import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import { Transcripcion } from '@domain/llamada/value-objects/Transcripcion';
@@ -59,6 +60,13 @@ class GeneradorIdStub implements GeneradorId {
   }
 }
 
+class RelojFijo implements Reloj {
+  constructor(private readonly instante: Date) {}
+  ahora(): Date {
+    return new Date(this.instante.getTime());
+  }
+}
+
 // --- Datos de apoyo ---
 
 const cita = Evidencia.crear('cita');
@@ -87,14 +95,18 @@ describe('AuditarLlamada', () => {
   let auditorias: AuditoriaRepositoryEnMemoria;
   let ia: AnalisisIaServiceStub;
   let generador: GeneradorIdStub;
+  let reloj: RelojFijo;
   let casoDeUso: AuditarLlamada;
+
+  const INSTANTE_AUDITORIA = new Date('2026-06-23T15:30:00.000Z');
 
   beforeEach(() => {
     llamadas = new LlamadaRepositoryEnMemoria();
     auditorias = new AuditoriaRepositoryEnMemoria();
     ia = new AnalisisIaServiceStub(respuestaIaPorDefecto);
     generador = new GeneradorIdStub('auditoria-fija');
-    casoDeUso = new AuditarLlamada(llamadas, ia, auditorias, generador);
+    reloj = new RelojFijo(INSTANTE_AUDITORIA);
+    casoDeUso = new AuditarLlamada(llamadas, ia, auditorias, generador, reloj);
     llamadas.sembrar(crearLlamada());
   });
 
@@ -107,6 +119,11 @@ describe('AuditarLlamada', () => {
   it('delega en el dominio el cálculo de la puntuación', async () => {
     const resultado = await casoDeUso.ejecutar(LlamadaId.crear('llamada-001'));
     expect(resultado.puntuacion().valor).toBe(50);
+  });
+
+  it('marca el resultado con el instante del reloj inyectado', async () => {
+    const resultado = await casoDeUso.ejecutar(LlamadaId.crear('llamada-001'));
+    expect(resultado.fechaAuditoria.toISOString()).toBe(INSTANTE_AUDITORIA.toISOString());
   });
 
   it('persiste el resultado mediante el repositorio de auditorías', async () => {

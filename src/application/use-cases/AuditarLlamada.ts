@@ -2,6 +2,7 @@ import type { LlamadaRepository } from '@domain/llamada/ports/LlamadaRepository'
 import type { AuditoriaRepository } from '@domain/auditoria/ports/AuditoriaRepository';
 import type { AnalisisIaService } from '@domain/auditoria/ports/AnalisisIaService';
 import type { GeneradorId } from '@domain/shared/ports/GeneradorId';
+import type { Reloj } from '@domain/shared/ports/Reloj';
 import type { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
 import { AuditoriaId } from '@domain/auditoria/value-objects/AuditoriaId';
@@ -19,6 +20,7 @@ export class AuditarLlamada {
     private readonly analisisIa: AnalisisIaService,
     private readonly auditorias: AuditoriaRepository,
     private readonly generadorId: GeneradorId,
+    private readonly reloj: Reloj,
   ) {}
 
   async ejecutar(llamadaId: LlamadaId): Promise<ResultadoAuditoria> {
@@ -35,6 +37,7 @@ export class AuditarLlamada {
     const resultado = ResultadoAuditoria.crear({
       id: AuditoriaId.crear(this.generadorId.siguiente()),
       llamadaId: llamada.id,
+      fechaAuditoria: this.reloj.ahora(),
       evaluaciones: analisis.evaluaciones,
       alertas: analisis.alertas,
     });
