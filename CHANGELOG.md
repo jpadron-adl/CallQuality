@@ -7,10 +7,19 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-23
+
+### Added
+- Fecha de auditoría: el resultado de cada auditoría registra el instante en que se realizó, sentando la base para el historial comparable y la reauditación. Desarrollado con TDD a través de todas las capas:
+  - Dominio: nuevo puerto `Reloj` que aísla la fuente no determinista del tiempo (análogo a `GeneradorId`), y `fechaAuditoria` (con copia defensiva) en el agregado `ResultadoAuditoria`.
+  - Aplicación: `AuditarLlamada` recibe el `Reloj` por inyección y sella el resultado con `reloj.ahora()`.
+  - Infraestructura: adaptador `RelojDelSistema` (cableado en el Composite Root) y exposición de `fechaAuditoria` en ISO 8601 en el DTO y el presentador.
+  - Dashboard: el `ResultadoAuditoriaDto` incluye `fechaAuditoria` y la vista `HistorialAuditorias` muestra la fecha formateada de cada auditoría.
+
 ## [0.7.0] - 2026-06-23
 
 ### Added
-- Historial de auditorías en el dashboard del profesor (desarrollado con TDD, 8 tests nuevos):
+- Historial de auditorías en el dashboard (desarrollado con TDD, 8 tests nuevos):
   - Vista `HistorialAuditorias`: lista las auditorías previas de una llamada (numeradas por orden de creación) con su puntuación y presencia de alertas, y permite desplegar el detalle completo de cada una de forma independiente. Consume `GET /api/llamadas/:id/auditorias` mediante `listarAuditorias`.
   - `ListaLlamadas` ofrece un botón «Historial» por llamada (vía la nueva prop opcional `onVerHistorial`).
   - `App` modela el panel de detalle como un estado discriminado (vacío, resultado puntual o historial), gestionando la carga del historial y sus errores.
@@ -18,7 +27,7 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 ## [0.6.0] - 2026-06-23
 
 ### Added
-- Dashboard del profesor (`web/`): aplicación Vite + React + TypeScript (`strict`) con Tailwind y componentes de estilo Shadcn/ui, desarrollada con TDD (Vitest + Testing Library, 19 tests):
+- Dashboard (`web/`): aplicación Vite + React + TypeScript (`strict`) con Tailwind y componentes de estilo Shadcn/ui, desarrollada con TDD (Vitest + Testing Library, 19 tests):
   - Cliente de la API (`auditoriaApi`) con `fetch` y `baseUrl` inyectables, tipos DTO espejo del contrato del backend y `ApiError` que encapsula el estado HTTP.
   - Vista `ListaLlamadas`: lista las llamadas pendientes y lanza su auditoría, con estado «en curso» por llamada.
   - Vista `DetalleAuditoria`: muestra la puntuación de calidad, el cumplimiento protocolo a protocolo con su evidencia y las alertas por severidad.
@@ -29,7 +38,7 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 ## [0.5.0] - 2026-06-22
 
 ### Added
-- Capa de entrada HTTP (API) que expone los casos de uso para el dashboard del profesor, en `src/infrastructure/web/`:
+- Capa de entrada HTTP (API) que expone los casos de uso para el dashboard, en `src/infrastructure/web/`:
   - Presentadores puros (`presentarLlamada`, `presentarResultadoAuditoria`) que serializan el dominio a DTOs planos, sin exponer value objects.
   - Contrato HTTP agnóstico del servidor (`PeticionHttp`/`RespuestaHttp`).
   - Router `ApiAuditoria` (testeable en memoria) con las rutas `GET /api/llamadas`, `POST /api/llamadas/:id/auditorias` y `GET /api/llamadas/:id/auditorias`, que mapea los errores de aplicación a códigos HTTP (404, 405).
