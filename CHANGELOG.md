@@ -7,6 +7,14 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-23
+
+### Added
+- Historial de auditorías en el dashboard del profesor (desarrollado con TDD, 8 tests nuevos):
+  - Vista `HistorialAuditorias`: lista las auditorías previas de una llamada (numeradas por orden de creación) con su puntuación y presencia de alertas, y permite desplegar el detalle completo de cada una de forma independiente. Consume `GET /api/llamadas/:id/auditorias` mediante `listarAuditorias`.
+  - `ListaLlamadas` ofrece un botón «Historial» por llamada (vía la nueva prop opcional `onVerHistorial`).
+  - `App` modela el panel de detalle como un estado discriminado (vacío, resultado puntual o historial), gestionando la carga del historial y sus errores.
+
 ## [0.6.0] - 2026-06-23
 
 ### Added

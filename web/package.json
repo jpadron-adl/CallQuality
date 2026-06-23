@@ -1,6 +1,6 @@
 {
   "name": "callquality-web",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Dashboard del profesor para el sistema de auditoría de calidad CallQuality",
   "private": true,
   "type": "module",
