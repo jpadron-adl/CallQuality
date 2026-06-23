@@ -7,6 +7,17 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-23
+
+### Added
+- Dashboard del profesor (`web/`): aplicación Vite + React + TypeScript (`strict`) con Tailwind y componentes de estilo Shadcn/ui, desarrollada con TDD (Vitest + Testing Library, 19 tests):
+  - Cliente de la API (`auditoriaApi`) con `fetch` y `baseUrl` inyectables, tipos DTO espejo del contrato del backend y `ApiError` que encapsula el estado HTTP.
+  - Vista `ListaLlamadas`: lista las llamadas pendientes y lanza su auditoría, con estado «en curso» por llamada.
+  - Vista `DetalleAuditoria`: muestra la puntuación de calidad, el cumplimiento protocolo a protocolo con su evidencia y las alertas por severidad.
+  - Composición `App` (maestro-detalle) que orquesta el cliente y el estado de la interfaz, con manejo de errores.
+  - Componentes base (`Button`, `Card`, `Badge`) y utilidades (`cn`, `formatearFechaHora`).
+- Proxy de desarrollo de Vite (`/api` → `127.0.0.1:3000`) para consumir la API sin depender de CORS en local.
+
 ## [0.5.0] - 2026-06-22
 
 ### Added
