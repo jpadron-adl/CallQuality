@@ -1,6 +1,6 @@
 {
   "name": "callquality",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Sistema Automatizado de Auditoría de Calidad y Cumplimiento para Call Centers basado en IA",
   "type": "module",
   "engines": {

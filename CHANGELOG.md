@@ -7,6 +7,13 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-23
+
+### Added
+- Reauditación desde el dashboard (desarrollada con TDD): la vista de historial ofrece un botón «Re-auditar» que vuelve a auditar la llamada y recarga el historial para mostrar la nueva pasada (cada auditoría conserva su fecha, lo que permite distinguir y ordenar las sucesivas ejecuciones).
+  - `HistorialAuditorias` acepta `llamadaId`, `onReauditar` y `reauditando`, mostrando el botón —con su estado de progreso— incluso cuando la llamada no tiene auditorías previas.
+  - `App` orquesta el flujo (auditar → recargar el historial) y gestiona su estado de progreso y de error.
+
 ## [0.8.0] - 2026-06-23
 
 ### Added
