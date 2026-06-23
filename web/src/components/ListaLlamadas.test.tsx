@@ -40,4 +40,19 @@ describe('ListaLlamadas', () => {
     const enCurso = screen.getByRole('button', { name: /auditando/i });
     expect(enCurso).toBeDisabled();
   });
+
+  it('no muestra el botón de historial si no se proporciona el callback', () => {
+    render(<ListaLlamadas llamadas={LLAMADAS} onAuditar={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /historial/i })).not.toBeInTheDocument();
+  });
+
+  it('invoca onVerHistorial con el id de la llamada al pulsar su botón de historial', async () => {
+    const onVerHistorial = vi.fn();
+    render(<ListaLlamadas llamadas={LLAMADAS} onAuditar={vi.fn()} onVerHistorial={onVerHistorial} />);
+
+    await userEvent.click(screen.getAllByRole('button', { name: /historial/i })[0]!);
+
+    expect(onVerHistorial).toHaveBeenCalledTimes(1);
+    expect(onVerHistorial).toHaveBeenCalledWith('llamada-1');
+  });
 });

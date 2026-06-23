@@ -9,6 +9,8 @@ export interface ListaLlamadasProps {
   readonly onAuditar: (llamadaId: string) => void;
   /** Id de la llamada cuya auditoría está en curso (deshabilita su botón). */
   readonly llamadaEnCurso?: string | null;
+  /** Si se proporciona, muestra un botón para consultar el historial de la llamada. */
+  readonly onVerHistorial?: (llamadaId: string) => void;
 }
 
 /**
@@ -16,7 +18,12 @@ export interface ListaLlamadasProps {
  * estado: recibe los datos y notifica la intención de auditar mediante `onAuditar`,
  * dejando la orquestación a su contenedor.
  */
-export function ListaLlamadas({ llamadas, onAuditar, llamadaEnCurso }: ListaLlamadasProps): React.JSX.Element {
+export function ListaLlamadas({
+  llamadas,
+  onAuditar,
+  llamadaEnCurso,
+  onVerHistorial,
+}: ListaLlamadasProps): React.JSX.Element {
   if (llamadas.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
@@ -41,6 +48,15 @@ export function ListaLlamadas({ llamadas, onAuditar, llamadaEnCurso }: ListaLlam
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge tono="neutro">{llamada.numeroIntervenciones} intervenciones</Badge>
+                  {onVerHistorial !== undefined && (
+                    <Button
+                      variante="contorno"
+                      tamano="pequeno"
+                      onClick={() => onVerHistorial(llamada.id)}
+                    >
+                      Historial
+                    </Button>
+                  )}
                   <Button
                     tamano="pequeno"
                     disabled={enCurso}
