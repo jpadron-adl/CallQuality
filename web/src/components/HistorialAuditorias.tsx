@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
+import { formatearFechaHora } from '@/lib/formato';
 
 export interface HistorialAuditoriasProps {
   /** Auditorías de la llamada en orden de creación (la primera es la más antigua). */
@@ -54,7 +55,12 @@ export function HistorialAuditorias({ auditorias }: HistorialAuditoriasProps): R
           <li key={auditoria.id}>
             <Card>
               <CardHeader className="flex-row items-center justify-between gap-3">
-                <CardTitle>Auditoría {indice + 1}</CardTitle>
+                <div className="flex flex-col gap-0.5">
+                  <CardTitle>Auditoría {indice + 1}</CardTitle>
+                  <span className="text-xs text-[var(--color-tenue)]">
+                    {formatearFechaHora(auditoria.fechaAuditoria)}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge tono={tonoPuntuacion(auditoria.puntuacion)}>{auditoria.puntuacion} / 100</Badge>
                   <Badge tono={auditoria.tieneAlertas ? 'peligro' : 'neutro'}>

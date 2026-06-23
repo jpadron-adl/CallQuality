@@ -6,6 +6,7 @@ import type { ResultadoAuditoriaDto } from '@/api/tipos';
 const RESULTADO: ResultadoAuditoriaDto = {
   id: 'auditoria-1',
   llamadaId: 'llamada-1',
+  fechaAuditoria: '2026-06-20T09:05:00.000Z',
   puntuacion: 75,
   tieneAlertas: true,
   evaluaciones: [

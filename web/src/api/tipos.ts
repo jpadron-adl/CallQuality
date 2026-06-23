@@ -30,6 +30,8 @@ export interface AlertaDto {
 export interface ResultadoAuditoriaDto {
   readonly id: string;
   readonly llamadaId: string;
+  /** Instante en que se realizó la auditoría, en ISO 8601. */
+  readonly fechaAuditoria: string;
   readonly puntuacion: number;
   readonly tieneAlertas: boolean;
   readonly evaluaciones: readonly EvaluacionDto[];

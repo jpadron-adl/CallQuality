@@ -13,6 +13,7 @@ const LLAMADAS: LlamadaDto[] = [
 const RESULTADO: ResultadoAuditoriaDto = {
   id: 'auditoria-1',
   llamadaId: 'llamada-1',
+  fechaAuditoria: '2026-06-20T09:05:00.000Z',
   puntuacion: 75,
   tieneAlertas: false,
   evaluaciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: true, evidencia: 'Buenos días...' }],

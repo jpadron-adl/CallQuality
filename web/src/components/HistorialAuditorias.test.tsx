@@ -8,6 +8,7 @@ function auditoria(id: string, puntuacion: number, tieneAlertas = false): Result
   return {
     id,
     llamadaId: 'llamada-1',
+    fechaAuditoria: '2026-06-20T09:05:00.000Z',
     puntuacion,
     tieneAlertas,
     evaluaciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: true, evidencia: 'Buenos días...' }],
@@ -33,6 +34,7 @@ describe('HistorialAuditorias', () => {
     expect(screen.getByText('Auditoría 2')).toBeInTheDocument();
     expect(screen.getByText('100 / 100')).toBeInTheDocument();
     expect(screen.getByText('60 / 100')).toBeInTheDocument();
+    expect(screen.getAllByText('20/06/2026, 09:05')).toHaveLength(2);
   });
 
   it('no muestra el detalle de una auditoría hasta que se expande', () => {
