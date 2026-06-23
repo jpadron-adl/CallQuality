@@ -9,6 +9,12 @@ import { formatearFechaHora } from '@/lib/formato';
 export interface HistorialAuditoriasProps {
   /** Auditorías de la llamada en orden de creación (la primera es la más antigua). */
   readonly auditorias: readonly ResultadoAuditoriaDto[];
+  /** Llamada a la que pertenece el historial. Necesaria para re-auditar. */
+  readonly llamadaId?: string;
+  /** Si se proporciona junto con `llamadaId`, muestra un botón para re-auditar la llamada. */
+  readonly onReauditar?: (llamadaId: string) => void;
+  /** Indica que hay una re-auditoría en curso (deshabilita el botón). */
+  readonly reauditando?: boolean;
 }
 
 /** Tono del badge de puntuación: verde si alta, ámbar si media, rojo si baja. */
@@ -24,16 +30,13 @@ function tonoPuntuacion(puntuacion: number): 'exito' | 'aviso' | 'peligro' {
  * completo de forma independiente. Numera las entradas por orden de creación, ya que el
  * DTO no expone una fecha de auditoría.
  */
-export function HistorialAuditorias({ auditorias }: HistorialAuditoriasProps): React.JSX.Element {
+export function HistorialAuditorias({
+  auditorias,
+  llamadaId,
+  onReauditar,
+  reauditando = false,
+}: HistorialAuditoriasProps): React.JSX.Element {
   const [expandidas, setExpandidas] = useState<ReadonlySet<string>>(new Set());
-
-  if (auditorias.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
-        Esta llamada aún no tiene auditorías registradas.
-      </p>
-    );
-  }
 
   const alternar = (id: string): void => {
     setExpandidas((previas) => {
@@ -47,9 +50,25 @@ export function HistorialAuditorias({ auditorias }: HistorialAuditoriasProps): R
     });
   };
 
+  const puedeReauditar = onReauditar !== undefined && llamadaId !== undefined;
+
   return (
-    <ul className="flex flex-col gap-3">
-      {auditorias.map((auditoria, indice) => {
+    <div className="flex flex-col gap-3">
+      {puedeReauditar && (
+        <div className="flex justify-end">
+          <Button tamano="pequeno" disabled={reauditando} onClick={() => onReauditar(llamadaId)}>
+            {reauditando ? 'Re-auditando…' : 'Re-auditar'}
+          </Button>
+        </div>
+      )}
+
+      {auditorias.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
+          Esta llamada aún no tiene auditorías registradas.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {auditorias.map((auditoria, indice) => {
         const expandida = expandidas.has(auditoria.id);
         return (
           <li key={auditoria.id}>
@@ -79,7 +98,9 @@ export function HistorialAuditorias({ auditorias }: HistorialAuditoriasProps): R
             </Card>
           </li>
         );
-      })}
-    </ul>
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

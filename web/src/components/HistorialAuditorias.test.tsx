@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
@@ -51,5 +51,40 @@ describe('HistorialAuditorias', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /ocultar detalle/i }));
     expect(screen.queryByText('Cumplimiento de protocolos')).not.toBeInTheDocument();
+  });
+
+  it('no muestra el botón de re-auditar si no se proporciona el callback', () => {
+    render(<HistorialAuditorias auditorias={AUDITORIAS} />);
+    expect(screen.queryByRole('button', { name: /re-auditar/i })).not.toBeInTheDocument();
+  });
+
+  it('invoca onReauditar con la llamadaId al pulsar el botón de re-auditar', async () => {
+    const onReauditar = vi.fn();
+    render(
+      <HistorialAuditorias auditorias={AUDITORIAS} llamadaId="llamada-1" onReauditar={onReauditar} />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /re-auditar/i }));
+
+    expect(onReauditar).toHaveBeenCalledTimes(1);
+    expect(onReauditar).toHaveBeenCalledWith('llamada-1');
+  });
+
+  it('ofrece re-auditar aunque la llamada no tenga auditorías previas', () => {
+    render(<HistorialAuditorias auditorias={[]} llamadaId="llamada-1" onReauditar={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /re-auditar/i })).toBeInTheDocument();
+    expect(screen.getByText(/no tiene auditor[ií]as registradas/i)).toBeInTheDocument();
+  });
+
+  it('deshabilita el botón y muestra el progreso mientras se re-audita', () => {
+    render(
+      <HistorialAuditorias
+        auditorias={AUDITORIAS}
+        llamadaId="llamada-1"
+        onReauditar={vi.fn()}
+        reauditando
+      />,
+    );
+    expect(screen.getByRole('button', { name: /re-auditando/i })).toBeDisabled();
   });
 });
