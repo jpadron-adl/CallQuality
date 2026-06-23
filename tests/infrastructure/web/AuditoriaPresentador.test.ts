@@ -27,6 +27,7 @@ const llamadaEjemplo = Llamada.crear({
 const resultadoEjemplo = ResultadoAuditoria.crear({
   id: AuditoriaId.crear('auditoria-001'),
   llamadaId: LlamadaId.crear('llamada-001'),
+  fechaAuditoria: new Date('2026-02-20T08:45:00.000Z'),
   evaluaciones: [
     EvaluacionProtocolo.crear(TipoProtocolo.SALUDO_INICIAL, true, Evidencia.crear('Buenos días')),
     EvaluacionProtocolo.crear(TipoProtocolo.DESPEDIDA, false, Evidencia.crear('No se despide')),
@@ -60,6 +61,11 @@ describe('presentarResultadoAuditoria', () => {
     expect(dto.llamadaId).toBe('llamada-001');
     expect(dto.puntuacion).toBe(50);
     expect(dto.tieneAlertas).toBe(true);
+  });
+
+  it('expone la fecha de auditoría en ISO 8601', () => {
+    const dto = presentarResultadoAuditoria(resultadoEjemplo);
+    expect(dto.fechaAuditoria).toBe('2026-02-20T08:45:00.000Z');
   });
 
   it('expone cada evaluación y alerta como DTO plano con su evidencia', () => {

@@ -27,6 +27,7 @@ export interface AlertaDto {
 export interface ResultadoAuditoriaDto {
   readonly id: string;
   readonly llamadaId: string;
+  readonly fechaAuditoria: string;
   readonly puntuacion: number;
   readonly tieneAlertas: boolean;
   readonly evaluaciones: EvaluacionDto[];
@@ -51,6 +52,7 @@ export function presentarResultadoAuditoria(resultado: ResultadoAuditoria): Resu
   return {
     id: resultado.id.valor,
     llamadaId: resultado.llamadaId.valor,
+    fechaAuditoria: resultado.fechaAuditoria.toISOString(),
     puntuacion: resultado.puntuacion().valor,
     tieneAlertas: resultado.tieneAlertas(),
     evaluaciones: resultado.evaluaciones.map((evaluacion) => ({
