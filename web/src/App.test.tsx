@@ -53,4 +53,25 @@ describe('App', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/error interno del servidor/i);
   });
+
+  it('carga y muestra el historial de auditorías de una llamada al pulsar su botón', async () => {
+    const cliente = clienteFalso({
+      listarAuditorias: vi.fn().mockResolvedValue([RESULTADO]),
+    });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
+
+    expect(cliente.listarAuditorias).toHaveBeenCalledWith('llamada-1');
+    expect(await screen.findByText('Auditoría 1')).toBeInTheDocument();
+  });
+
+  it('indica que no hay auditorías cuando el historial está vacío', async () => {
+    const cliente = clienteFalso({ listarAuditorias: vi.fn().mockResolvedValue([]) });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
+
+    expect(await screen.findByText(/no tiene auditor[ií]as registradas/i)).toBeInTheDocument();
+  });
 });

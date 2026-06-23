@@ -4,16 +4,42 @@ import { ApiError } from '@/api/ApiError';
 import type { LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
 import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
+import { HistorialAuditorias } from '@/components/HistorialAuditorias';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
   readonly cliente?: ClienteAuditoria;
 }
 
+/** Estado del panel de detalle (derecha): vacío, un resultado puntual o el historial. */
+type PanelDerecho =
+  | { readonly tipo: 'vacio' }
+  | { readonly tipo: 'cargando-historial' }
+  | { readonly tipo: 'resultado'; readonly resultado: ResultadoAuditoriaDto }
+  | { readonly tipo: 'historial'; readonly auditorias: readonly ResultadoAuditoriaDto[] };
+
 /** Traduce cualquier fallo en un mensaje legible para el profesor. */
 function mensajeDeError(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return 'No se ha podido contactar con la API de auditoría.';
+}
+
+/** Renderiza el contenido del panel de detalle según su estado. */
+function renderizarPanel(panel: PanelDerecho): React.JSX.Element {
+  switch (panel.tipo) {
+    case 'cargando-historial':
+      return <p className="text-sm text-[var(--color-tenue)]">Cargando historial…</p>;
+    case 'resultado':
+      return <DetalleAuditoria resultado={panel.resultado} />;
+    case 'historial':
+      return <HistorialAuditorias auditorias={panel.auditorias} />;
+    case 'vacio':
+      return (
+        <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
+          Selecciona una llamada y pulsa «Auditar» para analizarla, o «Historial» para ver sus auditorías previas.
+        </p>
+      );
+  }
 }
 
 /**
@@ -24,7 +50,7 @@ function mensajeDeError(error: unknown): string {
 export function App({ cliente }: AppProps): React.JSX.Element {
   const [api] = useState<ClienteAuditoria>(() => cliente ?? crearClienteAuditoria());
   const [llamadas, setLlamadas] = useState<readonly LlamadaDto[]>([]);
-  const [resultado, setResultado] = useState<ResultadoAuditoriaDto | null>(null);
+  const [panel, setPanel] = useState<PanelDerecho>({ tipo: 'vacio' });
   const [llamadaEnCurso, setLlamadaEnCurso] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,9 +80,21 @@ export function App({ cliente }: AppProps): React.JSX.Element {
       setError(null);
       api
         .auditarLlamada(llamadaId)
-        .then((nuevoResultado) => setResultado(nuevoResultado))
+        .then((nuevoResultado) => setPanel({ tipo: 'resultado', resultado: nuevoResultado }))
         .catch((err: unknown) => setError(mensajeDeError(err)))
         .finally(() => setLlamadaEnCurso(null));
+    },
+    [api],
+  );
+
+  const verHistorial = useCallback(
+    (llamadaId: string): void => {
+      setError(null);
+      setPanel({ tipo: 'cargando-historial' });
+      api
+        .listarAuditorias(llamadaId)
+        .then((auditorias) => setPanel({ tipo: 'historial', auditorias }))
+        .catch((err: unknown) => setError(mensajeDeError(err)));
     },
     [api],
   );
@@ -85,19 +123,23 @@ export function App({ cliente }: AppProps): React.JSX.Element {
           {cargando ? (
             <p className="text-sm text-[var(--color-tenue)]">Cargando llamadas…</p>
           ) : (
-            <ListaLlamadas llamadas={llamadas} onAuditar={auditar} llamadaEnCurso={llamadaEnCurso} />
+            <ListaLlamadas
+              llamadas={llamadas}
+              onAuditar={auditar}
+              llamadaEnCurso={llamadaEnCurso}
+              onVerHistorial={verHistorial}
+            />
           )}
         </section>
 
-        <section className="flex flex-col gap-3" aria-label="Resultado de la auditoría">
-          <h2 className="text-lg font-medium">Resultado de la auditoría</h2>
-          {resultado === null ? (
-            <p className="rounded-lg border border-dashed border-[var(--color-borde)] p-8 text-center text-[var(--color-tenue)]">
-              Selecciona una llamada y pulsa «Auditar» para ver su análisis.
-            </p>
-          ) : (
-            <DetalleAuditoria resultado={resultado} />
-          )}
+        <section
+          className="flex flex-col gap-3"
+          aria-label={panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
+        >
+          <h2 className="text-lg font-medium">
+            {panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
+          </h2>
+          {renderizarPanel(panel)}
         </section>
       </div>
     </main>
