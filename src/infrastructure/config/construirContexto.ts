@@ -11,6 +11,7 @@ import { OpenAiChatCompletions } from '@infrastructure/ia/openai/OpenAiChatCompl
 import { LlamadaRepositoryEnMemoria } from '@infrastructure/persistence/LlamadaRepositoryEnMemoria';
 import { AuditoriaRepositoryEnMemoria } from '@infrastructure/persistence/AuditoriaRepositoryEnMemoria';
 import { GeneradorIdUuid } from '@infrastructure/id/GeneradorIdUuid';
+import { RelojDelSistema } from '@infrastructure/tiempo/RelojDelSistema';
 import { CargadorLlamadasSinteticas } from '@infrastructure/data/CargadorLlamadasSinteticas';
 
 /**
@@ -44,6 +45,7 @@ export function construirContexto(config: AppConfig): ContextoAplicacion {
     construirAnalisis(config),
     auditorias,
     new GeneradorIdUuid(),
+    new RelojDelSistema(),
   );
 
   return { auditarLlamada, llamadas, auditorias };

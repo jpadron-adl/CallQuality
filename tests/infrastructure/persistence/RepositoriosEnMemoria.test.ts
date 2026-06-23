@@ -24,6 +24,7 @@ const crearResultado = (auditoriaId: string, llamadaId: string) =>
   ResultadoAuditoria.crear({
     id: AuditoriaId.crear(auditoriaId),
     llamadaId: LlamadaId.crear(llamadaId),
+    fechaAuditoria: new Date('2026-06-23T10:00:00.000Z'),
     evaluaciones: [EvaluacionProtocolo.crear(TipoProtocolo.SALUDO_INICIAL, true, Evidencia.crear('cita'))],
     alertas: [],
   });
