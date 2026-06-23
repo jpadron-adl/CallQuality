@@ -1,6 +1,7 @@
 import type { ResultadoAuditoriaDto } from '@/api/tipos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge, type BadgeProps } from '@/components/ui/Badge';
+import { formatearFechaHora } from '@/lib/formato';
 
 export interface DetalleAuditoriaProps {
   readonly resultado: ResultadoAuditoriaDto;
@@ -36,7 +37,12 @@ export function DetalleAuditoria({ resultado }: DetalleAuditoriaProps): React.JS
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Puntuación de calidad</CardTitle>
+          <div className="flex flex-col gap-0.5">
+            <CardTitle>Puntuación de calidad</CardTitle>
+            <span className="text-xs text-[var(--color-tenue)]">
+              Auditoría realizada el {formatearFechaHora(resultado.fechaAuditoria)}
+            </span>
+          </div>
           <Badge tono={tonoPuntuacion(resultado.puntuacion)} className="text-sm">
             {resultado.puntuacion} / 100
           </Badge>

@@ -22,6 +22,11 @@ describe('DetalleAuditoria', () => {
     expect(screen.getByText(/75/)).toBeInTheDocument();
   });
 
+  it('muestra la fecha en que se realizó la auditoría', () => {
+    render(<DetalleAuditoria resultado={RESULTADO} />);
+    expect(screen.getByText(/20\/06\/2026, 09:05/)).toBeInTheDocument();
+  });
+
   it('lista cada evaluación con su protocolo, estado de cumplimiento y evidencia', () => {
     render(<DetalleAuditoria resultado={RESULTADO} />);
 
