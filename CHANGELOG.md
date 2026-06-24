@@ -7,6 +7,19 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-24
+
+### Added
+- Persistencia real sobre SQLite (desarrollada con TDD, 25 tests nuevos), de modo que las llamadas y, sobre todo, las auditorías sobreviven a los reinicios. Implementada como adaptadores de los puertos ya existentes (`LlamadaRepository` y `AuditoriaRepository`), sin modificar el dominio ni la aplicación:
+  - Motor SQLite nativo de Node (`node:sqlite`), sin dependencias externas nuevas, en coherencia con el uso de `node:http` para la API.
+  - Adaptadores `LlamadaRepositorySqlite` y `AuditoriaRepositorySqlite` con una conexión `DatabaseSync` inyectada y compartida; el `INSERT … ON CONFLICT` da semántica de upsert por identidad.
+  - Esquema relacional idempotente (`crearEsquema`) con una tabla por agregado e integridad referencial; las colecciones internas (transcripción, evaluaciones y alertas) se almacenan como JSON, persistiendo cada agregado como una unidad.
+  - Mapeadores de ida y vuelta (dominio ↔ fila): la rehidratación trata los datos del almacén como no confiables (validación con Zod en la frontera y reconstrucción mediante las fábricas del dominio), y traduce cualquier incompatibilidad a `PersistenciaCorruptaError`.
+  - Configuración por entorno: `PERSISTENCIA=memoria|sqlite` (por defecto `memoria`) y `DB_PATH` (por defecto `callquality.sqlite`). El Composite Root selecciona el adaptador y siembra las llamadas sintéticas solo si el almacén está vacío (primer arranque), conservando las auditorías acumuladas.
+
+### Changed
+- `vitest.config.ts` carga `node:sqlite` mediante un módulo virtual (`createRequire`), ya que Node lo oculta de `builtinModules` por ser experimental y Vite intentaba resolverlo en disco.
+
 ## [0.9.1] - 2026-06-23
 
 ### Fixed

@@ -7,6 +7,11 @@ coverage/
 !.env.example
 .DS_Store
 
+# Ficheros de base de datos SQLite (estado local de ejecución)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
 # Herramientas locales del agente (no forman parte del proyecto)
 CLAUDE.md
 .engram
