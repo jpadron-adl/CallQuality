@@ -7,6 +7,15 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-06-24
+
+### Added
+- Ingesta de llamadas reales a partir de su transcripción textual (desarrollada con TDD, 22 tests nuevos en el backend y 8 en el dashboard), primer paso de la incorporación de llamadas más allá de los datos sintéticos:
+  - Aplicación: nuevo caso de uso `RegistrarLlamada`, que da de alta una llamada a partir de una transcripción ya textual y diarizada (rol + texto por turno). La fecha de inicio es opcional: en su ausencia se toma del puerto `Reloj`. Las invariantes (roles del catálogo, textos no vacíos, al menos una intervención) las garantiza el dominio al construir los value objects.
+  - API HTTP: nueva ruta `POST /api/llamadas`. El contrato `PeticionHttp` transporta ahora un cuerpo opcional ya deserializado; `ApiAuditoria` valida el payload con Zod (400 si la forma es inválida) y mapea los `DomainError` (p. ej. un rol fuera del catálogo) a 400 en lugar de filtrarlos como error interno. El adaptador de borde `ServidorHttp` lee y deserializa el cuerpo JSON entrante (400 ante un cuerpo mal formado).
+  - Dashboard: nuevo formulario `FormularioNuevaLlamada` (vista presentacional con lista dinámica de intervenciones) y método `registrarLlamada` en el cliente. `App` orquesta el flujo registrar → recargar el listado, que refleja la nueva llamada sin recargar la página.
+- Decisión de alcance: la ingesta desde audio (ASR + diarización tras un futuro puerto `TranscriptorAudio`) queda como fase posterior, construida sobre esta ingesta textual.
+
 ## [0.10.0] - 2026-06-24
 
 ### Added
