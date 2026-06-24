@@ -6,6 +6,7 @@ import type { LlamadaRepository } from '@domain/llamada/ports/LlamadaRepository'
 import type { AuditoriaRepository } from '@domain/auditoria/ports/AuditoriaRepository';
 import type { Llamada } from '@domain/llamada/Llamada';
 import { AuditarLlamada } from '@application/use-cases/AuditarLlamada';
+import { RegistrarLlamada } from '@application/use-cases/RegistrarLlamada';
 import { MockAnalisisService } from '@infrastructure/ia/MockAnalisisService';
 import { OpenAiAnalisisService } from '@infrastructure/ia/openai/OpenAiAnalisisService';
 import { OpenAiChatCompletions } from '@infrastructure/ia/openai/OpenAiChatCompletions';
@@ -24,6 +25,7 @@ import { CargadorLlamadasSinteticas } from '@infrastructure/data/CargadorLlamada
  */
 export interface ContextoAplicacion {
   readonly auditarLlamada: AuditarLlamada;
+  readonly registrarLlamada: RegistrarLlamada;
   readonly llamadas: LlamadaRepository;
   readonly auditorias: AuditoriaRepository;
 }
@@ -39,16 +41,19 @@ const DB_PATH_POR_DEFECTO = 'callquality.sqlite';
 export function construirContexto(config: AppConfig): ContextoAplicacion {
   const llamadasSinteticas = cargarLlamadasSinteticas();
   const { llamadas, auditorias } = construirRepositorios(config, llamadasSinteticas);
+  const generadorId = new GeneradorIdUuid();
+  const reloj = new RelojDelSistema();
 
   const auditarLlamada = new AuditarLlamada(
     llamadas,
     construirAnalisis(config),
     auditorias,
-    new GeneradorIdUuid(),
-    new RelojDelSistema(),
+    generadorId,
+    reloj,
   );
+  const registrarLlamada = new RegistrarLlamada(llamadas, generadorId, reloj);
 
-  return { auditarLlamada, llamadas, auditorias };
+  return { auditarLlamada, registrarLlamada, llamadas, auditorias };
 }
 
 /** Selecciona los adaptadores de persistencia concretos según la configuración. */

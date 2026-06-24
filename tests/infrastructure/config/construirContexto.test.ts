@@ -110,4 +110,16 @@ describe('construirContexto', () => {
     expect(historial).toHaveLength(1);
     expect(historial[0]?.id.esIgualA(resultado.id)).toBe(true);
   });
+
+  it('expone el caso de uso de alta y registra una nueva llamada de extremo a extremo', async () => {
+    const contexto = construirContexto({ modo: 'demo' });
+    const antes = (await contexto.llamadas.listarPendientesDeAuditar()).length;
+    const llamada = await contexto.registrarLlamada.ejecutar({
+      agenteId: 'agente-099',
+      intervenciones: [{ rol: 'AGENTE', texto: 'Hola, le atiende soporte' }],
+    });
+    const despues = await contexto.llamadas.listarPendientesDeAuditar();
+    expect(despues.length).toBe(antes + 1);
+    expect(despues.some((l) => l.id.esIgualA(llamada.id))).toBe(true);
+  });
 });
