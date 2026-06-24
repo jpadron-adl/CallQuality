@@ -45,8 +45,42 @@ export class ServidorHttp {
     }
 
     const ruta = new URL(req.url ?? '/', 'http://localhost').pathname;
-    const respuesta = await this.api.manejar({ metodo: req.method ?? 'GET', ruta });
+    const metodo = req.method ?? 'GET';
+
+    let cuerpo: unknown;
+    try {
+      cuerpo = await this.leerCuerpo(req);
+    } catch {
+      this.responder(res, 400, { error: 'El cuerpo de la petición no es JSON válido.' });
+      return;
+    }
+
+    const respuesta = await this.api.manejar({ metodo, ruta, cuerpo });
     this.responder(res, respuesta.estado, respuesta.cuerpo);
+  }
+
+  /**
+   * Acumula el cuerpo de la petición y lo deserializa como JSON. Devuelve undefined
+   * cuando no hay cuerpo (p. ej. GET); lanza si el contenido recibido no es JSON válido.
+   */
+  private leerCuerpo(req: IncomingMessage): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+      const fragmentos: Buffer[] = [];
+      req.on('data', (fragmento: Buffer) => fragmentos.push(fragmento));
+      req.on('error', reject);
+      req.on('end', () => {
+        const crudo = Buffer.concat(fragmentos).toString('utf-8').trim();
+        if (crudo.length === 0) {
+          resolve(undefined);
+          return;
+        }
+        try {
+          resolve(JSON.parse(crudo));
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error('JSON no válido'));
+        }
+      });
+    });
   }
 
   private responder(res: ServerResponse, estado: number, cuerpo: unknown): void {

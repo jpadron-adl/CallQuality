@@ -32,6 +32,30 @@ describe('ServidorHttp (integración sobre loopback)', () => {
     expect(cuerpo.llamadaId).toBe('llamada-001');
   });
 
+  it('registra una llamada vía POST con cuerpo JSON y devuelve 201', async () => {
+    const respuesta = await fetch(`${base}/api/llamadas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agenteId: 'agente-099',
+        intervenciones: [{ rol: 'AGENTE', texto: 'Buenos días' }],
+      }),
+    });
+    expect(respuesta.status).toBe(201);
+    const cuerpo = (await respuesta.json()) as { agenteId: string; numeroIntervenciones: number };
+    expect(cuerpo.agenteId).toBe('agente-099');
+    expect(cuerpo.numeroIntervenciones).toBe(1);
+  });
+
+  it('devuelve 400 ante un cuerpo JSON mal formado', async () => {
+    const respuesta = await fetch(`${base}/api/llamadas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{ esto no es json',
+    });
+    expect(respuesta.status).toBe(400);
+  });
+
   it('devuelve 404 en una ruta desconocida', async () => {
     const respuesta = await fetch(`${base}/api/nope`);
     expect(respuesta.status).toBe(404);
