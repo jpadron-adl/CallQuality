@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { crearClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipos';
 
 /** Construye una respuesta `fetch` falsa con cuerpo JSON y estado configurables. */
 function respuestaJson(cuerpo: unknown, estado = 200): Response {
@@ -63,6 +63,36 @@ describe('crearClienteAuditoria', () => {
       expect.objectContaining({ method: 'GET' }),
     );
     expect(auditorias).toEqual([RESULTADO]);
+  });
+
+  it('registra una nueva llamada con POST /api/llamadas y el cuerpo en JSON', async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson(LLAMADA, 201));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+    const nueva: NuevaLlamada = {
+      agenteId: 'agente-7',
+      intervenciones: [{ rol: 'AGENTE', texto: 'Buenos días' }],
+    };
+
+    const creada = await api.registrarLlamada(nueva);
+
+    expect(fetchFalso).toHaveBeenCalledWith(
+      '/api/llamadas',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(nueva),
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      }),
+    );
+    expect(creada).toEqual(LLAMADA);
+  });
+
+  it('propaga un ApiError 400 cuando el alta es rechazada por la API', async () => {
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson({ error: 'Cuerpo no válido.' }, 400));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+
+    await expect(
+      api.registrarLlamada({ agenteId: '', intervenciones: [] }),
+    ).rejects.toMatchObject({ name: 'ApiError', estado: 400 });
   });
 
   it('antepone la baseUrl configurada a la ruta', async () => {

@@ -1,5 +1,5 @@
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipos';
 
 /** Función `fetch` (inyectable para testear sin red ni dependencia del global). */
 export type FetchFn = (entrada: string, init?: RequestInit) => Promise<Response>;
@@ -16,6 +16,7 @@ export interface ClienteAuditoria {
   listarLlamadas(): Promise<LlamadaDto[]>;
   auditarLlamada(llamadaId: string): Promise<ResultadoAuditoriaDto>;
   listarAuditorias(llamadaId: string): Promise<ResultadoAuditoriaDto[]>;
+  registrarLlamada(nueva: NuevaLlamada): Promise<LlamadaDto>;
 }
 
 /**
@@ -27,11 +28,14 @@ export function crearClienteAuditoria(opciones: OpcionesClienteAuditoria = {}): 
   const baseUrl = opciones.baseUrl ?? '';
   const fetchFn: FetchFn = opciones.fetch ?? ((entrada, init) => fetch(entrada, init));
 
-  async function pedir<T>(ruta: string, metodo: 'GET' | 'POST'): Promise<T> {
-    const respuesta = await fetchFn(`${baseUrl}${ruta}`, {
-      method: metodo,
-      headers: { Accept: 'application/json' },
-    });
+  async function pedir<T>(ruta: string, metodo: 'GET' | 'POST', cuerpo?: unknown): Promise<T> {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (cuerpo !== undefined) headers['Content-Type'] = 'application/json';
+
+    const init: RequestInit = { method: metodo, headers };
+    if (cuerpo !== undefined) init.body = JSON.stringify(cuerpo);
+
+    const respuesta = await fetchFn(`${baseUrl}${ruta}`, init);
 
     if (!respuesta.ok) {
       throw new ApiError(respuesta.status, await extraerMensajeError(respuesta));
@@ -49,6 +53,9 @@ export function crearClienteAuditoria(opciones: OpcionesClienteAuditoria = {}): 
     },
     listarAuditorias(llamadaId) {
       return pedir<ResultadoAuditoriaDto[]>(`/api/llamadas/${encodeURIComponent(llamadaId)}/auditorias`, 'GET');
+    },
+    registrarLlamada(nueva) {
+      return pedir<LlamadaDto>('/api/llamadas', 'POST', nueva);
     },
   };
 }

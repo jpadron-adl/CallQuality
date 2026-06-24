@@ -12,6 +12,20 @@ export interface LlamadaDto {
   readonly numeroIntervenciones: number;
 }
 
+/** Un turno de la transcripción tal como lo envía el dashboard al dar de alta una llamada. */
+export interface IntervencionEntradaDto {
+  readonly rol: string;
+  readonly texto: string;
+}
+
+/** Cuerpo de `POST /api/llamadas`: alta de una llamada a partir de su transcripción textual. */
+export interface NuevaLlamada {
+  readonly agenteId: string;
+  readonly intervenciones: readonly IntervencionEntradaDto[];
+  /** Instante de inicio en ISO 8601; opcional (el backend usa el reloj si se omite). */
+  readonly fechaInicio?: string;
+}
+
 /** Evaluación de un protocolo dentro de un resultado de auditoría. */
 export interface EvaluacionDto {
   readonly protocolo: string;
