@@ -25,6 +25,7 @@ function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAudi
     listarLlamadas: vi.fn().mockResolvedValue(LLAMADAS),
     auditarLlamada: vi.fn().mockResolvedValue(RESULTADO),
     listarAuditorias: vi.fn().mockResolvedValue([]),
+    registrarLlamada: vi.fn().mockResolvedValue(LLAMADAS[0]),
     ...sobrescribir,
   };
 }
@@ -74,6 +75,34 @@ describe('App', () => {
     await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
 
     expect(await screen.findByText(/no tiene auditor[ií]as registradas/i)).toBeInTheDocument();
+  });
+
+  it('registra una nueva llamada desde el formulario y recarga el listado', async () => {
+    const nueva: LlamadaDto = {
+      id: 'llamada-2',
+      agenteId: 'agente-99',
+      fechaInicio: '2026-06-24T09:00:00.000Z',
+      numeroIntervenciones: 1,
+    };
+    const listarLlamadas = vi
+      .fn()
+      .mockResolvedValueOnce(LLAMADAS)
+      .mockResolvedValueOnce([...LLAMADAS, nueva]);
+    const cliente = clienteFalso({ listarLlamadas, registrarLlamada: vi.fn().mockResolvedValue(nueva) });
+    render(<App cliente={cliente} />);
+
+    await screen.findByText('agente-7');
+
+    await userEvent.type(screen.getByLabelText(/identificador del agente/i), 'agente-99');
+    await userEvent.type(screen.getByLabelText(/texto de la intervención 1/i), 'Hola');
+    await userEvent.click(screen.getByRole('button', { name: /registrar llamada/i }));
+
+    expect(cliente.registrarLlamada).toHaveBeenCalledWith({
+      agenteId: 'agente-99',
+      intervenciones: [{ rol: 'AGENTE', texto: 'Hola' }],
+    });
+    expect(await screen.findByText('agente-99')).toBeInTheDocument();
+    expect(listarLlamadas).toHaveBeenCalledTimes(2);
   });
 
   it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { crearClienteAuditoria, type ClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipos';
 import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
+import { FormularioNuevaLlamada } from '@/components/FormularioNuevaLlamada';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
@@ -69,27 +70,22 @@ export function App({ cliente }: AppProps): React.JSX.Element {
   const [panel, setPanel] = useState<PanelDerecho>({ tipo: 'vacio' });
   const [llamadaEnCurso, setLlamadaEnCurso] = useState<string | null>(null);
   const [reauditando, setReauditando] = useState(false);
+  const [registrando, setRegistrando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let activo = true;
+  const recargarLlamadas = useCallback((): Promise<void> => {
     setCargando(true);
-    api
+    return api
       .listarLlamadas()
-      .then((datos) => {
-        if (activo) setLlamadas(datos);
-      })
-      .catch((err: unknown) => {
-        if (activo) setError(mensajeDeError(err));
-      })
-      .finally(() => {
-        if (activo) setCargando(false);
-      });
-    return () => {
-      activo = false;
-    };
+      .then((datos) => setLlamadas(datos))
+      .catch((err: unknown) => setError(mensajeDeError(err)))
+      .finally(() => setCargando(false));
   }, [api]);
+
+  useEffect(() => {
+    void recargarLlamadas();
+  }, [recargarLlamadas]);
 
   const auditar = useCallback(
     (llamadaId: string): void => {
@@ -102,6 +98,19 @@ export function App({ cliente }: AppProps): React.JSX.Element {
         .finally(() => setLlamadaEnCurso(null));
     },
     [api],
+  );
+
+  const registrar = useCallback(
+    (nueva: NuevaLlamada): void => {
+      setRegistrando(true);
+      setError(null);
+      api
+        .registrarLlamada(nueva)
+        .then(() => recargarLlamadas())
+        .catch((err: unknown) => setError(mensajeDeError(err)))
+        .finally(() => setRegistrando(false));
+    },
+    [api, recargarLlamadas],
   );
 
   const verHistorial = useCallback(
@@ -147,6 +156,11 @@ export function App({ cliente }: AppProps): React.JSX.Element {
           {error}
         </p>
       )}
+
+      <section className="flex flex-col gap-3" aria-label="Registrar nueva llamada">
+        <h2 className="text-lg font-medium">Registrar nueva llamada</h2>
+        <FormularioNuevaLlamada onRegistrar={registrar} registrando={registrando} />
+      </section>
 
       <div className="grid gap-6 md:grid-cols-2">
         <section className="flex flex-col gap-3" aria-label="Llamadas pendientes">
