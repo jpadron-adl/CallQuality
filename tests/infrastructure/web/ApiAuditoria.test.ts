@@ -45,6 +45,55 @@ describe('ApiAuditoria', () => {
     expect(auditorias[0]?.llamadaId).toBe('llamada-001');
   });
 
+  it('POST /api/llamadas registra una nueva llamada y devuelve 201 con el DTO', async () => {
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: '/api/llamadas',
+      cuerpo: {
+        agenteId: 'agente-099',
+        intervenciones: [
+          { rol: 'AGENTE', texto: 'Buenos días, le atiende soporte' },
+          { rol: 'CLIENTE', texto: 'Tengo una consulta' },
+        ],
+      },
+    });
+    expect(respuesta.estado).toBe(201);
+    const dto = respuesta.cuerpo as LlamadaDto;
+    expect(dto.id).toBeDefined();
+    expect(dto.agenteId).toBe('agente-099');
+    expect(dto.numeroIntervenciones).toBe(2);
+  });
+
+  it('la llamada registrada vía POST aparece luego en GET /api/llamadas', async () => {
+    const alta = await api.manejar({
+      metodo: 'POST',
+      ruta: '/api/llamadas',
+      cuerpo: { agenteId: 'agente-099', intervenciones: [{ rol: 'AGENTE', texto: 'Hola' }] },
+    });
+    const id = (alta.cuerpo as LlamadaDto).id;
+    const lista = await api.manejar({ metodo: 'GET', ruta: '/api/llamadas' });
+    const llamadas = lista.cuerpo as LlamadaDto[];
+    expect(llamadas.some((l) => l.id === id)).toBe(true);
+  });
+
+  it('POST /api/llamadas con un cuerpo inválido devuelve 400', async () => {
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: '/api/llamadas',
+      cuerpo: { intervenciones: [] },
+    });
+    expect(respuesta.estado).toBe(400);
+  });
+
+  it('POST /api/llamadas con un rol fuera del catálogo del dominio devuelve 400', async () => {
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: '/api/llamadas',
+      cuerpo: { agenteId: 'agente-099', intervenciones: [{ rol: 'SUPERVISOR', texto: 'Hola' }] },
+    });
+    expect(respuesta.estado).toBe(400);
+  });
+
   it('devuelve 404 para una ruta desconocida', async () => {
     const respuesta = await api.manejar({ metodo: 'GET', ruta: '/api/desconocido' });
     expect(respuesta.estado).toBe(404);

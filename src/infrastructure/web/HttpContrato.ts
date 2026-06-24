@@ -7,6 +7,8 @@ export interface PeticionHttp {
   readonly metodo: string;
   /** Ruta (pathname) sin querystring, p. ej. "/api/llamadas". */
   readonly ruta: string;
+  /** Cuerpo ya deserializado de la petición (JSON), si lo hubiera. */
+  readonly cuerpo?: unknown;
 }
 
 export interface RespuestaHttp {

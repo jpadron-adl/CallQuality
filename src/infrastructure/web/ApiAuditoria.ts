@@ -1,8 +1,13 @@
 import type { ContextoAplicacion } from '@infrastructure/config/construirContexto';
 import type { PeticionHttp, RespuestaHttp } from '@infrastructure/web/HttpContrato';
 import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
+import { DomainError } from '@domain/shared/DomainError';
 import { LlamadaNoEncontradaError } from '@application/shared/LlamadaNoEncontradaError';
 import { presentarLlamada, presentarResultadoAuditoria } from '@infrastructure/web/AuditoriaPresentador';
+import {
+  registrarLlamadaSchema,
+  aComandoRegistrarLlamada,
+} from '@infrastructure/web/RegistrarLlamadaSchema';
 
 const RUTA_AUDITORIAS = /^\/api\/llamadas\/([^/]+)\/auditorias$/;
 
@@ -19,8 +24,9 @@ export class ApiAuditoria {
     const ruta = this.normalizar(peticion.ruta);
 
     if (ruta === '/api/llamadas') {
-      if (peticion.metodo !== 'GET') return this.metodoNoPermitido();
-      return this.listarLlamadas();
+      if (peticion.metodo === 'GET') return this.listarLlamadas();
+      if (peticion.metodo === 'POST') return this.registrarLlamada(peticion.cuerpo);
+      return this.metodoNoPermitido();
     }
 
     const coincidencia = RUTA_AUDITORIAS.exec(ruta);
@@ -37,6 +43,25 @@ export class ApiAuditoria {
   private async listarLlamadas(): Promise<RespuestaHttp> {
     const llamadas = await this.contexto.llamadas.listarPendientesDeAuditar();
     return { estado: 200, cuerpo: llamadas.map(presentarLlamada) };
+  }
+
+  private async registrarLlamada(cuerpo: unknown): Promise<RespuestaHttp> {
+    const validacion = registrarLlamadaSchema.safeParse(cuerpo);
+    if (!validacion.success) {
+      return { estado: 400, cuerpo: { error: 'Cuerpo de la petición no válido.' } };
+    }
+    try {
+      const comando = aComandoRegistrarLlamada(validacion.data);
+      const llamada = await this.contexto.registrarLlamada.ejecutar(comando);
+      return { estado: 201, cuerpo: presentarLlamada(llamada) };
+    } catch (error) {
+      // El dominio rechaza datos que la validación sintáctica no cubre (rol fuera
+      // del catálogo): es un error del cliente, no un fallo interno del servidor.
+      if (error instanceof DomainError) {
+        return { estado: 400, cuerpo: { error: error.message } };
+      }
+      throw error;
+    }
   }
 
   private async auditarLlamada(id: string): Promise<RespuestaHttp> {
