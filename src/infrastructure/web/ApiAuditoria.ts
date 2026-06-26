@@ -3,7 +3,11 @@ import type { PeticionHttp, RespuestaHttp } from '@infrastructure/web/HttpContra
 import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import { DomainError } from '@domain/shared/DomainError';
 import { LlamadaNoEncontradaError } from '@application/shared/LlamadaNoEncontradaError';
-import { presentarLlamada, presentarResultadoAuditoria } from '@infrastructure/web/AuditoriaPresentador';
+import {
+  presentarLlamada,
+  presentarResultadoAuditoria,
+  presentarInformeAgente,
+} from '@infrastructure/web/AuditoriaPresentador';
 import {
   registrarLlamadaSchema,
   aComandoRegistrarLlamada,
@@ -16,6 +20,7 @@ import { AuditoriaNoEncontradaError } from '@application/shared/AuditoriaNoEncon
 
 const RUTA_AUDITORIAS = /^\/api\/llamadas\/([^/]+)\/auditorias$/;
 const RUTA_REVISION = /^\/api\/auditorias\/([^/]+)\/revision$/;
+const RUTA_INFORME_AGENTE = /^\/api\/agentes\/([^/]+)\/informe$/;
 
 /**
  * Adaptador de entrada HTTP (controlador) de la API de auditoría. Traduce peticiones
@@ -47,6 +52,13 @@ export class ApiAuditoria {
     if (revision !== null) {
       const id = decodeURIComponent(revision[1]!);
       if (peticion.metodo === 'POST') return this.revisarAuditoria(id, peticion.cuerpo);
+      return this.metodoNoPermitido();
+    }
+
+    const informe = RUTA_INFORME_AGENTE.exec(ruta);
+    if (informe !== null) {
+      const agenteId = decodeURIComponent(informe[1]!);
+      if (peticion.metodo === 'GET') return this.informeAgente(agenteId);
       return this.metodoNoPermitido();
     }
 
@@ -109,6 +121,11 @@ export class ApiAuditoria {
       }
       throw error;
     }
+  }
+
+  private async informeAgente(agenteId: string): Promise<RespuestaHttp> {
+    const informe = await this.contexto.generarInformeAgente.ejecutar(agenteId);
+    return { estado: 200, cuerpo: presentarInformeAgente(informe) };
   }
 
   private async listarAuditorias(id: string): Promise<RespuestaHttp> {

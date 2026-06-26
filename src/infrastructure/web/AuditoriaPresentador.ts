@@ -1,5 +1,6 @@
 import type { Llamada } from '@domain/llamada/Llamada';
 import type { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
+import type { InformeAgente } from '@domain/auditoria/InformeAgente';
 
 /** Representación serializable de una llamada para la API. */
 export interface LlamadaDto {
@@ -43,6 +44,29 @@ export interface ResultadoAuditoriaDto {
   readonly alertas: AlertaDto[];
   /** Revisión humana, o null si la auditoría no ha sido revisada. */
   readonly revision: RevisionDto | null;
+}
+
+/** Recuento de cumplimiento de un protocolo en el informe de un agente. */
+export interface ProtocoloIncumplidoDto {
+  readonly protocolo: string;
+  readonly incumplimientos: number;
+  readonly evaluaciones: number;
+}
+
+/** Recuento de alertas por severidad en el informe de un agente. */
+export interface AlertasPorSeveridadDto {
+  readonly severidad: string;
+  readonly total: number;
+}
+
+/** Representación serializable del informe de desempeño de un agente para la API. */
+export interface InformeAgenteDto {
+  readonly agenteId: string;
+  readonly numeroLlamadasAuditadas: number;
+  readonly puntuacionMedia: number;
+  readonly protocolosMasIncumplidos: ProtocoloIncumplidoDto[];
+  readonly totalAlertas: number;
+  readonly alertasPorSeveridad: AlertasPorSeveridadDto[];
 }
 
 /**
@@ -94,5 +118,16 @@ export function presentarResultadoAuditoria(resultado: ResultadoAuditoria): Resu
             comentario: revision.comentario,
             correcciones: revision.correcciones.map(presentarEvaluacion),
           },
+  };
+}
+
+export function presentarInformeAgente(informe: InformeAgente): InformeAgenteDto {
+  return {
+    agenteId: informe.agenteId,
+    numeroLlamadasAuditadas: informe.numeroLlamadasAuditadas,
+    puntuacionMedia: informe.puntuacionMedia,
+    protocolosMasIncumplidos: informe.protocolosMasIncumplidos.map((p) => ({ ...p })),
+    totalAlertas: informe.totalAlertas,
+    alertasPorSeveridad: informe.alertasPorSeveridad.map((a) => ({ ...a })),
   };
 }
