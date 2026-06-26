@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { presentarLlamada, presentarResultadoAuditoria } from '@infrastructure/web/AuditoriaPresentador';
+import {
+  presentarLlamada,
+  presentarResultadoAuditoria,
+  presentarInformeAgente,
+} from '@infrastructure/web/AuditoriaPresentador';
+import { InformeAgente } from '@domain/auditoria/InformeAgente';
 import { Llamada } from '@domain/llamada/Llamada';
 import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import { Transcripcion } from '@domain/llamada/value-objects/Transcripcion';
@@ -113,5 +118,26 @@ describe('presentarResultadoAuditoria', () => {
       correcciones: [{ protocolo: 'DESPEDIDA', cumplido: true, evidencia: 'Sí se despide al final' }],
     });
     expect(dto.evaluaciones.find((e) => e.protocolo === 'DESPEDIDA')?.cumplido).toBe(true);
+  });
+});
+
+describe('presentarInformeAgente', () => {
+  it('serializa el informe del agente a un DTO plano', () => {
+    const informe = InformeAgente.generar('agente-7', [resultadoEjemplo]);
+    const dto = presentarInformeAgente(informe);
+    expect(dto.agenteId).toBe('agente-7');
+    expect(dto.numeroLlamadasAuditadas).toBe(1);
+    expect(dto.puntuacionMedia).toBe(50);
+    expect(dto.protocolosMasIncumplidos).toEqual([
+      { protocolo: 'DESPEDIDA', incumplimientos: 1, evaluaciones: 1 },
+      { protocolo: 'SALUDO_INICIAL', incumplimientos: 0, evaluaciones: 1 },
+    ]);
+    expect(dto.totalAlertas).toBe(1);
+    expect(dto.alertasPorSeveridad).toEqual([{ severidad: 'ALTA', total: 1 }]);
+  });
+
+  it('produce un DTO serializable a JSON sin pérdida', () => {
+    const dto = presentarInformeAgente(InformeAgente.generar('agente-7', []));
+    expect(JSON.parse(JSON.stringify(dto))).toEqual(dto);
   });
 });

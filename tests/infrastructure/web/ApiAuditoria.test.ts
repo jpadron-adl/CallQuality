@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ApiAuditoria } from '@infrastructure/web/ApiAuditoria';
 import { construirContexto } from '@infrastructure/config/construirContexto';
-import type { ResultadoAuditoriaDto, LlamadaDto } from '@infrastructure/web/AuditoriaPresentador';
+import type {
+  ResultadoAuditoriaDto,
+  LlamadaDto,
+  InformeAgenteDto,
+} from '@infrastructure/web/AuditoriaPresentador';
 
 const crearApi = () => new ApiAuditoria(construirContexto({ modo: 'demo' }));
 
@@ -133,6 +137,19 @@ describe('ApiAuditoria', () => {
       cuerpo: { comentario: 'sin revisor' },
     });
     expect(respuesta.estado).toBe(400);
+  });
+
+  it('GET /api/agentes/:id/informe devuelve el informe de desempeño del agente', async () => {
+    await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+
+    const respuesta = await api.manejar({ metodo: 'GET', ruta: '/api/agentes/agente-007/informe' });
+
+    expect(respuesta.estado).toBe(200);
+    const dto = respuesta.cuerpo as InformeAgenteDto;
+    expect(dto.agenteId).toBe('agente-007');
+    expect(dto.numeroLlamadasAuditadas).toBe(1);
+    expect(dto.puntuacionMedia).toBeGreaterThanOrEqual(0);
+    expect(dto.puntuacionMedia).toBeLessThanOrEqual(100);
   });
 
   it('devuelve 404 para una ruta desconocida', async () => {
