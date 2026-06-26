@@ -22,6 +22,8 @@ export interface FilaAuditoria {
   readonly fechaAuditoria: string;
   readonly evaluaciones: string;
   readonly alertas: string;
+  /** Revisión humana serializada como JSON, o null si la auditoría no ha sido revisada. */
+  readonly revision: string | null;
 }
 
 const evaluacionesSchema = z.array(
@@ -31,6 +33,13 @@ const evaluacionesSchema = z.array(
 const alertasSchema = z.array(
   z.object({ tipo: z.string(), severidad: z.string(), evidencia: z.string() }),
 );
+
+const revisionSchema = z.object({
+  revisor: z.string(),
+  fechaRevision: z.string(),
+  comentario: z.string().nullable(),
+  correcciones: evaluacionesSchema,
+});
 
 /** Serializa el agregado ResultadoAuditoria a una fila plana (dominio → almacenamiento). */
 export function serializarAuditoria(resultado: ResultadoAuditoria): FilaAuditoria {
@@ -52,7 +61,26 @@ export function serializarAuditoria(resultado: ResultadoAuditoria): FilaAuditori
         evidencia: alerta.evidencia.valor,
       })),
     ),
+    revision: serializarRevision(resultado),
   };
+}
+
+/** Serializa la revisión humana a JSON, o null si la auditoría no ha sido revisada. */
+function serializarRevision(resultado: ResultadoAuditoria): string | null {
+  const revision = resultado.revision;
+  if (revision === null) {
+    return null;
+  }
+  return JSON.stringify({
+    revisor: revision.revisor,
+    fechaRevision: revision.fechaRevision.toISOString(),
+    comentario: revision.comentario,
+    correcciones: revision.correcciones.map((correccion) => ({
+      protocolo: correccion.tipo.valor,
+      cumplido: correccion.cumplido,
+      evidencia: correccion.evidencia.valor,
+    })),
+  });
 }
 
 /**
@@ -64,8 +92,10 @@ export function serializarAuditoria(resultado: ResultadoAuditoria): FilaAuditori
 export function deserializarAuditoria(fila: FilaAuditoria): ResultadoAuditoria {
   const evaluaciones = parsear(fila.evaluaciones, evaluacionesSchema, 'las evaluaciones');
   const alertas = parsear(fila.alertas, alertasSchema, 'las alertas');
+  const revision =
+    fila.revision === null ? null : parsear(fila.revision, revisionSchema, 'la revisión');
   try {
-    return ResultadoAuditoria.crear({
+    const resultado = ResultadoAuditoria.crear({
       id: AuditoriaId.crear(fila.id),
       llamadaId: LlamadaId.crear(fila.llamadaId),
       fechaAuditoria: new Date(fila.fechaAuditoria),
@@ -84,6 +114,21 @@ export function deserializarAuditoria(fila: FilaAuditoria): ResultadoAuditoria {
         ),
       ),
     });
+    if (revision !== null) {
+      resultado.revisar({
+        revisor: revision.revisor,
+        fechaRevision: new Date(revision.fechaRevision),
+        ...(revision.comentario === null ? {} : { comentario: revision.comentario }),
+        correcciones: revision.correcciones.map((correccion) =>
+          EvaluacionProtocolo.crear(
+            TipoProtocolo.desde(correccion.protocolo),
+            correccion.cumplido,
+            Evidencia.crear(correccion.evidencia),
+          ),
+        ),
+      });
+    }
+    return resultado;
   } catch (error) {
     if (error instanceof DomainError) {
       throw new PersistenciaCorruptaError(error.message);

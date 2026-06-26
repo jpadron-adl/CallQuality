@@ -21,21 +21,22 @@ export class AuditoriaRepositorySqlite implements AuditoriaRepository {
     const fila = serializarAuditoria(resultado);
     this.db
       .prepare(
-        `INSERT INTO auditorias (id, llamadaId, fechaAuditoria, evaluaciones, alertas)
-         VALUES (?, ?, ?, ?, ?)
+        `INSERT INTO auditorias (id, llamadaId, fechaAuditoria, evaluaciones, alertas, revision)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
            llamadaId = excluded.llamadaId,
            fechaAuditoria = excluded.fechaAuditoria,
            evaluaciones = excluded.evaluaciones,
-           alertas = excluded.alertas`,
+           alertas = excluded.alertas,
+           revision = excluded.revision`,
       )
-      .run(fila.id, fila.llamadaId, fila.fechaAuditoria, fila.evaluaciones, fila.alertas);
+      .run(fila.id, fila.llamadaId, fila.fechaAuditoria, fila.evaluaciones, fila.alertas, fila.revision);
   }
 
   async obtenerPorId(id: AuditoriaId): Promise<ResultadoAuditoria | null> {
     const fila = this.db
       .prepare(
-        `SELECT id, llamadaId, fechaAuditoria, evaluaciones, alertas
+        `SELECT id, llamadaId, fechaAuditoria, evaluaciones, alertas, revision
          FROM auditorias WHERE id = ?`,
       )
       .get(id.valor) as unknown as FilaAuditoria | undefined;
@@ -45,7 +46,7 @@ export class AuditoriaRepositorySqlite implements AuditoriaRepository {
   async obtenerPorLlamada(id: LlamadaId): Promise<ResultadoAuditoria[]> {
     const filas = this.db
       .prepare(
-        `SELECT id, llamadaId, fechaAuditoria, evaluaciones, alertas
+        `SELECT id, llamadaId, fechaAuditoria, evaluaciones, alertas, revision
          FROM auditorias WHERE llamadaId = ? ORDER BY fechaAuditoria ASC`,
       )
       .all(id.valor) as unknown as FilaAuditoria[];

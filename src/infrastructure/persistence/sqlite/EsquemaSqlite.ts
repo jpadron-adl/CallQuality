@@ -21,9 +21,23 @@ export function crearEsquema(db: DatabaseSync): void {
       llamadaId TEXT NOT NULL REFERENCES llamadas(id),
       fechaAuditoria TEXT NOT NULL,
       evaluaciones TEXT NOT NULL,
-      alertas TEXT NOT NULL
+      alertas TEXT NOT NULL,
+      revision TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_auditorias_llamada ON auditorias(llamadaId);
   `);
+  añadirColumnaRevisionSiFalta(db);
+}
+
+/**
+ * Migración idempotente para bases de datos creadas antes de la revisión humana: añade la
+ * columna `revision` a `auditorias` si todavía no existe (SQLite no admite ADD COLUMN IF NOT
+ * EXISTS, de modo que se consulta el esquema antes de alterarlo).
+ */
+function añadirColumnaRevisionSiFalta(db: DatabaseSync): void {
+  const columnas = db.prepare('PRAGMA table_info(auditorias)').all() as Array<{ name: string }>;
+  if (!columnas.some((columna) => columna.name === 'revision')) {
+    db.exec('ALTER TABLE auditorias ADD COLUMN revision TEXT;');
+  }
 }
