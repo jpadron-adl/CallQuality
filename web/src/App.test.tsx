@@ -112,6 +112,31 @@ describe('App', () => {
     expect(listarLlamadas).toHaveBeenCalledTimes(2);
   });
 
+  it('revisa una auditoría desde el historial y recarga el listado de auditorías', async () => {
+    const revisado: ResultadoAuditoriaDto = {
+      ...RESULTADO,
+      revision: { revisor: 'supervisor-01', fechaRevision: '2026-06-26T10:00:00.000Z', comentario: null, correcciones: [] },
+    };
+    const listarAuditorias = vi.fn().mockResolvedValue([RESULTADO]);
+    const cliente = clienteFalso({
+      listarAuditorias,
+      revisarAuditoria: vi.fn().mockResolvedValue(revisado),
+    });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /ver detalle/i }));
+    await userEvent.type(screen.getByLabelText(/revisor/i), 'supervisor-01');
+    await userEvent.click(screen.getByRole('button', { name: /guardar revisión/i }));
+
+    expect(cliente.revisarAuditoria).toHaveBeenCalledWith(
+      'auditoria-1',
+      expect.objectContaining({ revisor: 'supervisor-01' }),
+    );
+    // Una carga al abrir el historial y otra tras revisar para reflejar la revisión.
+    expect(listarAuditorias).toHaveBeenCalledTimes(2);
+  });
+
   it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {
     const cliente = clienteFalso({ listarAuditorias: vi.fn().mockResolvedValue([RESULTADO]) });
     render(<App cliente={cliente} />);

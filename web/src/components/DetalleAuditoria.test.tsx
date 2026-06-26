@@ -50,4 +50,19 @@ describe('DetalleAuditoria', () => {
     render(<DetalleAuditoria resultado={{ ...RESULTADO, tieneAlertas: false, alertas: [] }} />);
     expect(screen.getByText(/sin alertas de cumplimiento/i)).toBeInTheDocument();
   });
+
+  it('muestra el sello de revisión cuando la auditoría ha sido revisada', () => {
+    const revisado = {
+      ...RESULTADO,
+      revision: {
+        revisor: 'supervisor-09',
+        fechaRevision: '2026-06-26T10:00:00.000Z',
+        comentario: 'Validada con matices.',
+        correcciones: [],
+      },
+    };
+    render(<DetalleAuditoria resultado={revisado} />);
+    expect(screen.getByText(/revisada por supervisor-09/i)).toBeInTheDocument();
+    expect(screen.getByText(/validada con matices/i)).toBeInTheDocument();
+  });
 });
