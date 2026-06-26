@@ -5,7 +5,7 @@ import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipo
 import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
-import { FormularioNuevaLlamada } from '@/components/FormularioNuevaLlamada';
+import { CargaLlamadaJson } from '@/components/CargaLlamadaJson';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
@@ -159,7 +159,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
 
       <section className="flex flex-col gap-3" aria-label="Registrar nueva llamada">
         <h2 className="text-lg font-medium">Registrar nueva llamada</h2>
-        <FormularioNuevaLlamada onRegistrar={registrar} registrando={registrando} />
+        <CargaLlamadaJson onRegistrar={registrar} registrando={registrando} />
       </section>
 
       <div className="grid gap-6 md:grid-cols-2">

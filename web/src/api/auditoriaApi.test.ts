@@ -70,7 +70,7 @@ describe('crearClienteAuditoria', () => {
     const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
     const nueva: NuevaLlamada = {
       agenteId: 'agente-7',
-      intervenciones: [{ rol: 'AGENTE', texto: 'Buenos días' }],
+      transcripcion: [{ rol: 'AGENTE', texto: 'Buenos días' }],
     };
 
     const creada = await api.registrarLlamada(nueva);
@@ -91,7 +91,7 @@ describe('crearClienteAuditoria', () => {
     const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
 
     await expect(
-      api.registrarLlamada({ agenteId: '', intervenciones: [] }),
+      api.registrarLlamada({ agenteId: '', transcripcion: [] }),
     ).rejects.toMatchObject({ name: 'ApiError', estado: 400 });
   });
 

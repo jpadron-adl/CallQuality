@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '@/App';
 import { ApiError } from '@/api/ApiError';
@@ -77,7 +77,7 @@ describe('App', () => {
     expect(await screen.findByText(/no tiene auditor[ií]as registradas/i)).toBeInTheDocument();
   });
 
-  it('registra una nueva llamada desde el formulario y recarga el listado', async () => {
+  it('registra una nueva llamada subiendo un fichero JSON y recarga el listado', async () => {
     const nueva: LlamadaDto = {
       id: 'llamada-2',
       agenteId: 'agente-99',
@@ -93,15 +93,20 @@ describe('App', () => {
 
     await screen.findByText('agente-7');
 
-    await userEvent.type(screen.getByLabelText(/identificador del agente/i), 'agente-99');
-    await userEvent.type(screen.getByLabelText(/texto de la intervención 1/i), 'Hola');
-    await userEvent.click(screen.getByRole('button', { name: /registrar llamada/i }));
+    const fichero = new File(
+      [JSON.stringify({ agenteId: 'agente-99', transcripcion: [{ rol: 'AGENTE', texto: 'Hola' }] })],
+      'llamada.json',
+      { type: 'application/json' },
+    );
+    await userEvent.upload(screen.getByLabelText(/fichero de la llamada/i), fichero);
+    await userEvent.click(await screen.findByRole('button', { name: /registrar llamada/i }));
 
     expect(cliente.registrarLlamada).toHaveBeenCalledWith({
       agenteId: 'agente-99',
-      intervenciones: [{ rol: 'AGENTE', texto: 'Hola' }],
+      transcripcion: [{ rol: 'AGENTE', texto: 'Hola' }],
     });
-    expect(await screen.findByText('agente-99')).toBeInTheDocument();
+    const pendientes = screen.getByRole('region', { name: /llamadas pendientes/i });
+    expect(await within(pendientes).findByText('agente-99')).toBeInTheDocument();
     expect(listarLlamadas).toHaveBeenCalledTimes(2);
   });
 

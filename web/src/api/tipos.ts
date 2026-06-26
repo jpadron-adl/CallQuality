@@ -18,10 +18,14 @@ export interface IntervencionEntradaDto {
   readonly texto: string;
 }
 
-/** Cuerpo de `POST /api/llamadas`: alta de una llamada a partir de su transcripción textual. */
+/**
+ * Cuerpo de `POST /api/llamadas`: alta de una llamada a partir de su transcripción textual.
+ * Es el mismo formato de los ficheros de ejemplo (`ejemplos/llamadas/`) y de las llamadas
+ * sintéticas, de modo que un fichero puede subirse y enviarse tal cual.
+ */
 export interface NuevaLlamada {
   readonly agenteId: string;
-  readonly intervenciones: readonly IntervencionEntradaDto[];
+  readonly transcripcion: readonly IntervencionEntradaDto[];
   /** Instante de inicio en ISO 8601; opcional (el backend usa el reloj si se omite). */
   readonly fechaInicio?: string;
 }
