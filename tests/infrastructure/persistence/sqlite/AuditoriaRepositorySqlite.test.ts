@@ -72,6 +72,37 @@ describe('AuditoriaRepositorySqlite', () => {
     expect(recuperadas).toEqual([]);
   });
 
+  it('recupera una auditoría por su identificador', async () => {
+    await repo.guardar(auditoria('auditoria-1', 'llamada-1', '2026-06-24T11:00:00.000Z'));
+
+    const recuperada = await repo.obtenerPorId(AuditoriaId.crear('auditoria-1'));
+
+    expect(recuperada?.id.valor).toBe('auditoria-1');
+  });
+
+  it('devuelve null al buscar por un identificador inexistente', async () => {
+    expect(await repo.obtenerPorId(AuditoriaId.crear('inexistente'))).toBeNull();
+  });
+
+  it('persiste y recupera la revisión humana de una auditoría', async () => {
+    const revisada = auditoria('auditoria-1', 'llamada-1', '2026-06-24T11:00:00.000Z');
+    revisada.revisar({
+      revisor: 'supervisor-09',
+      fechaRevision: new Date('2026-06-26T09:30:00.000Z'),
+      comentario: 'Validada.',
+      correcciones: [
+        EvaluacionProtocolo.crear(TipoProtocolo.SALUDO_INICIAL, false, Evidencia.crear('No saluda realmente')),
+      ],
+    });
+    await repo.guardar(revisada);
+
+    const recuperada = await repo.obtenerPorId(AuditoriaId.crear('auditoria-1'));
+
+    expect(recuperada?.estaRevisada()).toBe(true);
+    expect(recuperada?.revision?.revisor).toBe('supervisor-09');
+    expect(recuperada?.puntuacion().valor).toBe(0);
+  });
+
   it('aísla las auditorías por llamada', async () => {
     const llamadas = new LlamadaRepositorySqlite(db);
     await llamadas.guardar(

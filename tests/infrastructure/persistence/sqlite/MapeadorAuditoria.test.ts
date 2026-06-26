@@ -89,6 +89,53 @@ describe('MapeadorAuditoria', () => {
     expect(reconstruido.evaluaciones).toHaveLength(1);
   });
 
+  it('serializa con revisión nula una auditoría que no ha sido revisada', () => {
+    expect(serializarAuditoria(auditoriaEjemplo()).revision).toBeNull();
+  });
+
+  it('serializa la revisión humana (revisor, fecha, comentario y correcciones)', () => {
+    const revisada = auditoriaEjemplo();
+    revisada.revisar({
+      revisor: 'supervisor-09',
+      fechaRevision: new Date('2026-06-26T09:30:00.000Z'),
+      comentario: 'Revisada y corregida.',
+      correcciones: [
+        EvaluacionProtocolo.crear(TipoProtocolo.DESPEDIDA, true, Evidencia.crear('Sí se despide al cierre')),
+      ],
+    });
+
+    const fila = serializarAuditoria(revisada);
+    expect(fila.revision).not.toBeNull();
+    expect(JSON.parse(fila.revision as string)).toEqual({
+      revisor: 'supervisor-09',
+      fechaRevision: '2026-06-26T09:30:00.000Z',
+      comentario: 'Revisada y corregida.',
+      correcciones: [{ protocolo: 'DESPEDIDA', cumplido: true, evidencia: 'Sí se despide al cierre' }],
+    });
+  });
+
+  it('reconstruye la revisión en la ida y vuelta, recalculando la puntuación efectiva', () => {
+    const revisada = auditoriaEjemplo();
+    revisada.revisar({
+      revisor: 'supervisor-09',
+      fechaRevision: new Date('2026-06-26T09:30:00.000Z'),
+      comentario: 'Revisada y corregida.',
+      correcciones: [
+        EvaluacionProtocolo.crear(TipoProtocolo.DESPEDIDA, true, Evidencia.crear('Sí se despide al cierre')),
+      ],
+    });
+
+    const reconstruido = deserializarAuditoria(serializarAuditoria(revisada));
+
+    expect(reconstruido.estaRevisada()).toBe(true);
+    expect(reconstruido.revision?.revisor).toBe('supervisor-09');
+    expect(reconstruido.revision?.comentario).toBe('Revisada y corregida.');
+    expect(reconstruido.revision?.fechaRevision.toISOString()).toBe('2026-06-26T09:30:00.000Z');
+    // El veredicto original del LLM se conserva; la puntuación efectiva refleja la corrección.
+    expect(reconstruido.evaluaciones[1]?.cumplido).toBe(false);
+    expect(reconstruido.puntuacion().valor).toBe(100);
+  });
+
   it('lanza PersistenciaCorruptaError si las evaluaciones almacenadas no son JSON válido', () => {
     const fila = { ...serializarAuditoria(auditoriaEjemplo()), evaluaciones: 'roto' };
 
