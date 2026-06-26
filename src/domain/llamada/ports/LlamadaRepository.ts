@@ -10,4 +10,5 @@ export interface LlamadaRepository {
   obtenerPorId(id: LlamadaId): Promise<Llamada | null>;
   guardar(llamada: Llamada): Promise<void>;
   listarPendientesDeAuditar(): Promise<Llamada[]>;
+  listarPorAgente(agenteId: string): Promise<Llamada[]>;
 }

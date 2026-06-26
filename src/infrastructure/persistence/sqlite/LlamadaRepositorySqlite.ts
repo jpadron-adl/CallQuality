@@ -43,4 +43,11 @@ export class LlamadaRepositorySqlite implements LlamadaRepository {
       .all() as unknown as FilaLlamada[];
     return filas.map((fila) => deserializarLlamada(fila));
   }
+
+  async listarPorAgente(agenteId: string): Promise<Llamada[]> {
+    const filas = this.db
+      .prepare('SELECT id, agenteId, fechaInicio, transcripcion FROM llamadas WHERE agenteId = ?')
+      .all(agenteId) as unknown as FilaLlamada[];
+    return filas.map((fila) => deserializarLlamada(fila));
+  }
 }

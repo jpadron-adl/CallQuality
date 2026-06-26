@@ -21,6 +21,9 @@ class LlamadaRepositoryEnMemoria implements LlamadaRepository {
   async listarPendientesDeAuditar(): Promise<Llamada[]> {
     return [...this.guardadas];
   }
+  async listarPorAgente(agenteId: string): Promise<Llamada[]> {
+    return this.guardadas.filter((llamada) => llamada.agenteId === agenteId);
+  }
 }
 
 class GeneradorIdStub implements GeneradorId {

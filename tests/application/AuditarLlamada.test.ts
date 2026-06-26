@@ -33,6 +33,9 @@ class LlamadaRepositoryEnMemoria implements LlamadaRepository {
   async listarPendientesDeAuditar(): Promise<Llamada[]> {
     return [...this.llamadas.values()];
   }
+  async listarPorAgente(agenteId: string): Promise<Llamada[]> {
+    return [...this.llamadas.values()].filter((llamada) => llamada.agenteId === agenteId);
+  }
 }
 
 class AuditoriaRepositoryEnMemoria implements AuditoriaRepository {
