@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { crearClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, NuevaLlamada, NuevaRevision, ResultadoAuditoriaDto } from '@/api/tipos';
+import type {
+  InformeAgenteDto,
+  LlamadaDto,
+  NuevaLlamada,
+  NuevaRevision,
+  ResultadoAuditoriaDto,
+} from '@/api/tipos';
 
 /** Construye una respuesta `fetch` falsa con cuerpo JSON y estado configurables. */
 function respuestaJson(cuerpo: unknown, estado = 200): Response {
@@ -110,6 +116,27 @@ describe('crearClienteAuditoria', () => {
       }),
     );
     expect(resultado.revision?.revisor).toBe('supervisor-1');
+  });
+
+  it('obtiene el informe de un agente con GET /api/agentes/:id/informe', async () => {
+    const informe: InformeAgenteDto = {
+      agenteId: 'agente-7',
+      numeroLlamadasAuditadas: 2,
+      puntuacionMedia: 75,
+      protocolosMasIncumplidos: [{ protocolo: 'DESPEDIDA', incumplimientos: 1, evaluaciones: 2 }],
+      totalAlertas: 0,
+      alertasPorSeveridad: [],
+    };
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson(informe));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+
+    const resultado = await api.obtenerInformeAgente('agente-7');
+
+    expect(fetchFalso).toHaveBeenCalledWith(
+      '/api/agentes/agente-7/informe',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(resultado.puntuacionMedia).toBe(75);
   });
 
   it('propaga un ApiError 400 cuando el alta es rechazada por la API', async () => {
