@@ -11,6 +11,7 @@ import { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import { Transcripcion } from '@domain/llamada/value-objects/Transcripcion';
 import { Intervencion } from '@domain/llamada/value-objects/Intervencion';
 import { IntervinienteRol } from '@domain/llamada/value-objects/IntervinienteRol';
+import { AuditoriaId } from '@domain/auditoria/value-objects/AuditoriaId';
 import { TipoProtocolo } from '@domain/auditoria/value-objects/TipoProtocolo';
 import { EvaluacionProtocolo } from '@domain/auditoria/value-objects/EvaluacionProtocolo';
 import { Evidencia } from '@domain/auditoria/value-objects/Evidencia';
@@ -38,6 +39,9 @@ class AuditoriaRepositoryEnMemoria implements AuditoriaRepository {
   readonly guardados: ResultadoAuditoria[] = [];
   async guardar(resultado: ResultadoAuditoria): Promise<void> {
     this.guardados.push(resultado);
+  }
+  async obtenerPorId(id: AuditoriaId): Promise<ResultadoAuditoria | null> {
+    return this.guardados.find((r) => r.id.esIgualA(id)) ?? null;
   }
   async obtenerPorLlamada(id: LlamadaId): Promise<ResultadoAuditoria[]> {
     return this.guardados.filter((r) => r.llamadaId.esIgualA(id));

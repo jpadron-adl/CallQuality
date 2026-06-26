@@ -1,4 +1,5 @@
 import type { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
+import type { AuditoriaId } from '@domain/auditoria/value-objects/AuditoriaId';
 import type { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 
 /**
@@ -7,5 +8,6 @@ import type { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
  */
 export interface AuditoriaRepository {
   guardar(resultado: ResultadoAuditoria): Promise<void>;
+  obtenerPorId(id: AuditoriaId): Promise<ResultadoAuditoria | null>;
   obtenerPorLlamada(id: LlamadaId): Promise<ResultadoAuditoria[]>;
 }

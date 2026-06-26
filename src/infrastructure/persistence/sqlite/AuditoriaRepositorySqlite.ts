@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { AuditoriaRepository } from '@domain/auditoria/ports/AuditoriaRepository';
 import type { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
+import type { AuditoriaId } from '@domain/auditoria/value-objects/AuditoriaId';
 import type { LlamadaId } from '@domain/llamada/value-objects/LlamadaId';
 import {
   serializarAuditoria,
@@ -29,6 +30,16 @@ export class AuditoriaRepositorySqlite implements AuditoriaRepository {
            alertas = excluded.alertas`,
       )
       .run(fila.id, fila.llamadaId, fila.fechaAuditoria, fila.evaluaciones, fila.alertas);
+  }
+
+  async obtenerPorId(id: AuditoriaId): Promise<ResultadoAuditoria | null> {
+    const fila = this.db
+      .prepare(
+        `SELECT id, llamadaId, fechaAuditoria, evaluaciones, alertas
+         FROM auditorias WHERE id = ?`,
+      )
+      .get(id.valor) as unknown as FilaAuditoria | undefined;
+    return fila === undefined ? null : deserializarAuditoria(fila);
   }
 
   async obtenerPorLlamada(id: LlamadaId): Promise<ResultadoAuditoria[]> {
