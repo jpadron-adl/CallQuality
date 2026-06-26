@@ -7,6 +7,18 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-06-26
+
+### Changed
+- Reformulada la ingesta de llamadas: en lugar de teclear la transcripción turno a turno, el usuario sube un fichero JSON con la conversación completa. El contrato de alta (`POST /api/llamadas`) pasa a usar el campo `transcripcion` en lugar de `intervenciones`, unificándose con el formato de las llamadas sintéticas (`llamadas-demo.json`); así un fichero de ejemplo puede subirse tal cual. Un `id` u otras claves presentes en el fichero se ignoran (el identificador lo genera el sistema). El comando interno del caso de uso `RegistrarLlamada` sigue hablando de `intervenciones` (lenguaje de la aplicación): la traducción ocurre en la frontera HTTP.
+- Dashboard: el formulario manual `FormularioNuevaLlamada` se sustituye por el componente `CargaLlamadaJson`, que lee y valida el fichero en el cliente (JSON mal formado o forma inesperada se notifican con un mensaje claro), muestra un resumen (agente y número de intervenciones) y delega el alta en su contenedor.
+
+### Added
+- Ficheros de ejemplo en `ejemplos/llamadas/` (cinco escenarios: llamada ejemplar, cliente conflictivo, sin saludo ni despedida, lenguaje ofensivo del cliente y reclamación formal) con un `README.md` que documenta el formato y el resultado esperado de cada uno en modo demo. Pensados para que el usuario los suba directamente desde el dashboard.
+
+### Removed
+- Componente `FormularioNuevaLlamada` (alta turno a turno), reemplazado por la carga de fichero JSON.
+
 ## [0.11.0] - 2026-06-24
 
 ### Added
