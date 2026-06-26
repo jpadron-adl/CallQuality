@@ -55,4 +55,14 @@ describe('ListaLlamadas', () => {
     expect(onVerHistorial).toHaveBeenCalledTimes(1);
     expect(onVerHistorial).toHaveBeenCalledWith('llamada-1');
   });
+
+  it('invoca onVerInforme con el id del agente al pulsar su botón de informe', async () => {
+    const onVerInforme = vi.fn();
+    render(<ListaLlamadas llamadas={LLAMADAS} onAuditar={vi.fn()} onVerInforme={onVerInforme} />);
+
+    await userEvent.click(screen.getAllByRole('button', { name: /informe/i })[0]!);
+
+    expect(onVerInforme).toHaveBeenCalledTimes(1);
+    expect(onVerInforme).toHaveBeenCalledWith('agente-7');
+  });
 });

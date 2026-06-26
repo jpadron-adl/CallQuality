@@ -145,6 +145,26 @@ describe('App', () => {
     expect(listarAuditorias).toHaveBeenCalledTimes(2);
   });
 
+  it('muestra el informe de desempeño del agente al pulsar su botón de informe', async () => {
+    const cliente = clienteFalso({
+      obtenerInformeAgente: vi.fn().mockResolvedValue({
+        agenteId: 'agente-7',
+        numeroLlamadasAuditadas: 2,
+        puntuacionMedia: 80,
+        protocolosMasIncumplidos: [],
+        totalAlertas: 0,
+        alertasPorSeveridad: [],
+      }),
+    });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /informe/i }));
+
+    expect(cliente.obtenerInformeAgente).toHaveBeenCalledWith('agente-7');
+    expect(await screen.findByText(/2 llamadas auditadas/i)).toBeInTheDocument();
+    expect(screen.getByText('80 / 100')).toBeInTheDocument();
+  });
+
   it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {
     const cliente = clienteFalso({ listarAuditorias: vi.fn().mockResolvedValue([RESULTADO]) });
     render(<App cliente={cliente} />);
