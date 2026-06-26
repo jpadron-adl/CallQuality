@@ -18,6 +18,7 @@ const RESULTADO: ResultadoAuditoriaDto = {
   tieneAlertas: false,
   evaluaciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: true, evidencia: 'Buenos días...' }],
   alertas: [],
+  revision: null,
 };
 
 function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAuditoria {
@@ -26,6 +27,7 @@ function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAudi
     auditarLlamada: vi.fn().mockResolvedValue(RESULTADO),
     listarAuditorias: vi.fn().mockResolvedValue([]),
     registrarLlamada: vi.fn().mockResolvedValue(LLAMADAS[0]),
+    revisarAuditoria: vi.fn().mockResolvedValue(RESULTADO),
     ...sobrescribir,
   };
 }

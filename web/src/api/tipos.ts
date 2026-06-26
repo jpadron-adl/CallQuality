@@ -44,6 +44,14 @@ export interface AlertaDto {
   readonly evidencia: string;
 }
 
+/** Revisión humana de una auditoría, espejo de `RevisionDto` del backend. */
+export interface RevisionDto {
+  readonly revisor: string;
+  readonly fechaRevision: string;
+  readonly comentario: string | null;
+  readonly correcciones: readonly EvaluacionDto[];
+}
+
 /** Resultado de una auditoría, devuelto por POST/GET de `/api/llamadas/:id/auditorias`. */
 export interface ResultadoAuditoriaDto {
   readonly id: string;
@@ -52,6 +60,23 @@ export interface ResultadoAuditoriaDto {
   readonly fechaAuditoria: string;
   readonly puntuacion: number;
   readonly tieneAlertas: boolean;
+  /** Evaluaciones efectivas (con las correcciones del revisor aplicadas, si las hay). */
   readonly evaluaciones: readonly EvaluacionDto[];
   readonly alertas: readonly AlertaDto[];
+  /** Revisión humana, o null si la auditoría no ha sido revisada. */
+  readonly revision: RevisionDto | null;
+}
+
+/** Una corrección de un protocolo enviada al revisar una auditoría. */
+export interface CorreccionEntradaDto {
+  readonly protocolo: string;
+  readonly cumplido: boolean;
+  readonly evidencia: string;
+}
+
+/** Cuerpo de `POST /api/auditorias/:id/revision`: la revisión humana de una auditoría. */
+export interface NuevaRevision {
+  readonly revisor: string;
+  readonly comentario?: string;
+  readonly correcciones?: readonly CorreccionEntradaDto[];
 }

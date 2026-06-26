@@ -13,6 +13,7 @@ function auditoria(id: string, puntuacion: number, tieneAlertas = false): Result
     tieneAlertas,
     evaluaciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: true, evidencia: 'Buenos días...' }],
     alertas: tieneAlertas ? [{ tipo: 'LENGUAJE_INADECUADO', severidad: 'ALTA', evidencia: '...' }] : [],
+    revision: null,
   };
 }
 

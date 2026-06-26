@@ -14,6 +14,7 @@ const RESULTADO: ResultadoAuditoriaDto = {
     { protocolo: 'DESPEDIDA', cumplido: false, evidencia: 'No consta despedida.' },
   ],
   alertas: [{ tipo: 'LENGUAJE_INADECUADO', severidad: 'ALTA', evidencia: 'Expresión malsonante.' }],
+  revision: null,
 };
 
 describe('DetalleAuditoria', () => {
