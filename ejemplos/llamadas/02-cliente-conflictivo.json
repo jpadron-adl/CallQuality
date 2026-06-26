@@ -1,0 +1,11 @@
+{
+  "agenteId": "agente-014",
+  "fechaInicio": "2026-06-25T11:40:00.000Z",
+  "transcripcion": [
+    { "rol": "AGENTE", "texto": "Dígame qué necesita." },
+    { "rol": "CLIENTE", "texto": "Llevo tres semanas con un cargo no reconocido en mi cuenta. Esto es una estafa." },
+    { "rol": "CLIENTE", "texto": "Si no me lo arreglan hoy mismo, les voy a denunciar y hablaré con mi abogado." },
+    { "rol": "AGENTE", "texto": "No puedo hacer nada con eso, tendrá que volver a llamar mañana." },
+    { "rol": "CLIENTE", "texto": "Es inadmisible, quiero presentar una reclamación formal." }
+  ]
+}

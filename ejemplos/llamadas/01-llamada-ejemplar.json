@@ -1,0 +1,15 @@
+{
+  "agenteId": "agente-007",
+  "fechaInicio": "2026-06-25T09:15:00.000Z",
+  "transcripcion": [
+    { "rol": "AGENTE", "texto": "Buenos días, le atiende Ana en el servicio de atención al cliente, ¿en qué puedo ayudarle?" },
+    { "rol": "CLIENTE", "texto": "Hola, llamo porque tengo una duda con mi última factura." },
+    { "rol": "AGENTE", "texto": "Con mucho gusto. Por seguridad, ¿puede confirmarme su DNI y su número de cliente?" },
+    { "rol": "CLIENTE", "texto": "Sí, mi número de cliente es 482915 y mi DNI termina en 12B." },
+    { "rol": "AGENTE", "texto": "Gracias. Veo su factura: el importe corresponde a la cuota mensual más una llamada internacional." },
+    { "rol": "CLIENTE", "texto": "Ah, perfecto, ahora lo entiendo." },
+    { "rol": "AGENTE", "texto": "Además, le ofrezco una promoción con un descuento del 10% si amplía su tarifa de datos." },
+    { "rol": "CLIENTE", "texto": "Me interesa, apúntelo por favor." },
+    { "rol": "AGENTE", "texto": "Hecho. Que tenga un buen día y gracias por su llamada." }
+  ]
+}

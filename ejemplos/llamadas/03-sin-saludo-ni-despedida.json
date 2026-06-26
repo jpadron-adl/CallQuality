@@ -1,0 +1,11 @@
+{
+  "agenteId": "agente-022",
+  "fechaInicio": "2026-06-25T13:05:00.000Z",
+  "transcripcion": [
+    { "rol": "AGENTE", "texto": "¿Qué quiere?" },
+    { "rol": "CLIENTE", "texto": "Quería saber el saldo de mi línea." },
+    { "rol": "AGENTE", "texto": "Su saldo es de doce euros con treinta." },
+    { "rol": "CLIENTE", "texto": "De acuerdo, gracias." },
+    { "rol": "AGENTE", "texto": "Ya está." }
+  ]
+}

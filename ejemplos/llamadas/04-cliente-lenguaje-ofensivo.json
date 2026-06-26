@@ -1,0 +1,13 @@
+{
+  "agenteId": "agente-031",
+  "fechaInicio": "2026-06-25T16:20:00.000Z",
+  "transcripcion": [
+    { "rol": "AGENTE", "texto": "Buenas tardes, ¿en qué puedo ayudarle?" },
+    { "rol": "CLIENTE", "texto": "Llevo media hora esperando, es usted un inútil." },
+    { "rol": "AGENTE", "texto": "Lamento la espera, voy a ayudarle ahora mismo con su consulta." },
+    { "rol": "CLIENTE", "texto": "Quiero cambiar mi domiciliación bancaria." },
+    { "rol": "AGENTE", "texto": "Para confirmar su identidad, indíqueme por favor su fecha de nacimiento." },
+    { "rol": "CLIENTE", "texto": "5 de marzo de 1985." },
+    { "rol": "AGENTE", "texto": "Gracias, ya he actualizado sus datos. Que tenga un buen día." }
+  ]
+}

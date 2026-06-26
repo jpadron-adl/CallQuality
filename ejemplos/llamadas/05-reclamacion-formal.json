@@ -1,0 +1,13 @@
+{
+  "agenteId": "agente-007",
+  "fechaInicio": "2026-06-25T17:50:00.000Z",
+  "transcripcion": [
+    { "rol": "AGENTE", "texto": "Buenas tardes, bienvenido al servicio de atención. ¿En qué le ayudo?" },
+    { "rol": "CLIENTE", "texto": "Quiero poner una reclamación por el tiempo de espera, llevo días intentando contactar." },
+    { "rol": "AGENTE", "texto": "Lo lamento. Para tramitarla, ¿puede confirmarme su número de cliente?" },
+    { "rol": "CLIENTE", "texto": "Sí, es el 771204." },
+    { "rol": "AGENTE", "texto": "Gracias, he registrado su reclamación con el número R-5582. Recibirá respuesta en 48 horas." },
+    { "rol": "CLIENTE", "texto": "De acuerdo, espero que se resuelva pronto." },
+    { "rol": "AGENTE", "texto": "Así será. Gracias por su llamada, hasta luego." }
+  ]
+}
