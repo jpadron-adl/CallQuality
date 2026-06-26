@@ -78,4 +78,40 @@ describe('presentarResultadoAuditoria', () => {
       { tipo: 'AMENAZA', severidad: 'ALTA', evidencia: 'le voy a denunciar' },
     ]);
   });
+
+  it('presenta la revisión como null cuando la auditoría no ha sido revisada', () => {
+    expect(presentarResultadoAuditoria(resultadoEjemplo).revision).toBeNull();
+  });
+
+  it('expone la revisión y las evaluaciones efectivas con la puntuación recalculada', () => {
+    const revisado = ResultadoAuditoria.crear({
+      id: AuditoriaId.crear('auditoria-002'),
+      llamadaId: LlamadaId.crear('llamada-001'),
+      fechaAuditoria: new Date('2026-02-20T08:45:00.000Z'),
+      evaluaciones: [
+        EvaluacionProtocolo.crear(TipoProtocolo.SALUDO_INICIAL, true, Evidencia.crear('Buenos días')),
+        EvaluacionProtocolo.crear(TipoProtocolo.DESPEDIDA, false, Evidencia.crear('No se despide')),
+      ],
+      alertas: [],
+    });
+    revisado.revisar({
+      revisor: 'supervisor-01',
+      fechaRevision: new Date('2026-06-26T09:00:00.000Z'),
+      comentario: 'Corrijo la despedida.',
+      correcciones: [
+        EvaluacionProtocolo.crear(TipoProtocolo.DESPEDIDA, true, Evidencia.crear('Sí se despide al final')),
+      ],
+    });
+
+    const dto = presentarResultadoAuditoria(revisado);
+
+    expect(dto.puntuacion).toBe(100);
+    expect(dto.revision).toEqual({
+      revisor: 'supervisor-01',
+      fechaRevision: '2026-06-26T09:00:00.000Z',
+      comentario: 'Corrijo la despedida.',
+      correcciones: [{ protocolo: 'DESPEDIDA', cumplido: true, evidencia: 'Sí se despide al final' }],
+    });
+    expect(dto.evaluaciones.find((e) => e.protocolo === 'DESPEDIDA')?.cumplido).toBe(true);
+  });
 });

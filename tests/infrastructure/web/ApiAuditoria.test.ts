@@ -94,6 +94,47 @@ describe('ApiAuditoria', () => {
     expect(respuesta.estado).toBe(400);
   });
 
+  it('POST /api/auditorias/:id/revision revisa la auditoría y devuelve 201 con la revisión aplicada', async () => {
+    const alta = await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+    const auditoriaId = (alta.cuerpo as ResultadoAuditoriaDto).id;
+
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: `/api/auditorias/${auditoriaId}/revision`,
+      cuerpo: {
+        revisor: 'supervisor-01',
+        comentario: 'Revisada.',
+        correcciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: false, evidencia: 'No saluda realmente.' }],
+      },
+    });
+
+    expect(respuesta.estado).toBe(201);
+    const dto = respuesta.cuerpo as ResultadoAuditoriaDto;
+    expect(dto.revision?.revisor).toBe('supervisor-01');
+    expect(dto.evaluaciones.find((e) => e.protocolo === 'SALUDO_INICIAL')?.cumplido).toBe(false);
+  });
+
+  it('POST /api/auditorias/:id/revision sobre una auditoría inexistente devuelve 404', async () => {
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: '/api/auditorias/no-existe/revision',
+      cuerpo: { revisor: 'supervisor-01' },
+    });
+    expect(respuesta.estado).toBe(404);
+  });
+
+  it('POST /api/auditorias/:id/revision con un cuerpo inválido (sin revisor) devuelve 400', async () => {
+    const alta = await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+    const auditoriaId = (alta.cuerpo as ResultadoAuditoriaDto).id;
+
+    const respuesta = await api.manejar({
+      metodo: 'POST',
+      ruta: `/api/auditorias/${auditoriaId}/revision`,
+      cuerpo: { comentario: 'sin revisor' },
+    });
+    expect(respuesta.estado).toBe(400);
+  });
+
   it('devuelve 404 para una ruta desconocida', async () => {
     const respuesta = await api.manejar({ metodo: 'GET', ruta: '/api/desconocido' });
     expect(respuesta.estado).toBe(404);
