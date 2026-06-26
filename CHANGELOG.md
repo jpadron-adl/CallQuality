@@ -7,6 +7,15 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-26
+
+### Added
+- Informe de desempeño por agente (read-side analítico), desarrollado con TDD estricto (micro-commits rojo-verde-refactor) a través de todas las capas. Por cada agente agrega sus auditorías y resume su calidad.
+  - Dominio: read-model `InformeAgente.generar(agenteId, auditorias)` que calcula la puntuación media, el ranking de protocolos más incumplidos y el recuento de alertas por severidad. Para reflejar la valoración vigente considera solo la auditoría más reciente de cada llamada (descarta re-auditorías anteriores) y usa la puntuación efectiva, de modo que las correcciones humanas quedan incorporadas.
+  - Aplicación: caso de uso `GenerarInformeAgente` (consulta de solo lectura) y nuevo método de puerto `LlamadaRepository.listarPorAgente`, con sus adaptadores en memoria y SQLite.
+  - API HTTP: nueva ruta `GET /api/agentes/:id/informe` con su presentador (`InformeAgenteDto`).
+  - Dashboard: vista `InformeAgente` (puntuación media, protocolos más incumplidos y alertas por severidad), botón «Informe» por agente en `ListaLlamadas` y el panel correspondiente en `App`.
+
 ## [0.13.0] - 2026-06-26
 
 ### Added
