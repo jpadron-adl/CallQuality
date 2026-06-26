@@ -6,7 +6,7 @@ import {
 
 const cuerpoValido = {
   agenteId: 'agente-007',
-  intervenciones: [
+  transcripcion: [
     { rol: 'AGENTE', texto: 'Buenos días' },
     { rol: 'CLIENTE', texto: 'Hola' },
   ],
@@ -26,8 +26,16 @@ describe('registrarLlamadaSchema', () => {
     expect(resultado.success).toBe(true);
   });
 
+  it('ignora un identificador de llamada presente en el fichero (lo genera el sistema)', () => {
+    const resultado = registrarLlamadaSchema.safeParse({ ...cuerpoValido, id: 'llamada-001' });
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data).not.toHaveProperty('id');
+    }
+  });
+
   it('rechaza un cuerpo sin identificador de agente', () => {
-    const resultado = registrarLlamadaSchema.safeParse({ intervenciones: cuerpoValido.intervenciones });
+    const resultado = registrarLlamadaSchema.safeParse({ transcripcion: cuerpoValido.transcripcion });
     expect(resultado.success).toBe(false);
   });
 
@@ -36,15 +44,15 @@ describe('registrarLlamadaSchema', () => {
     expect(resultado.success).toBe(false);
   });
 
-  it('rechaza una lista de intervenciones vacía', () => {
-    const resultado = registrarLlamadaSchema.safeParse({ ...cuerpoValido, intervenciones: [] });
+  it('rechaza una transcripción vacía', () => {
+    const resultado = registrarLlamadaSchema.safeParse({ ...cuerpoValido, transcripcion: [] });
     expect(resultado.success).toBe(false);
   });
 
   it('rechaza una intervención con texto vacío', () => {
     const resultado = registrarLlamadaSchema.safeParse({
       ...cuerpoValido,
-      intervenciones: [{ rol: 'AGENTE', texto: '   ' }],
+      transcripcion: [{ rol: 'AGENTE', texto: '   ' }],
     });
     expect(resultado.success).toBe(false);
   });

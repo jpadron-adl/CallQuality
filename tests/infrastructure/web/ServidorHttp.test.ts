@@ -38,7 +38,7 @@ describe('ServidorHttp (integración sobre loopback)', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         agenteId: 'agente-099',
-        intervenciones: [{ rol: 'AGENTE', texto: 'Buenos días' }],
+        transcripcion: [{ rol: 'AGENTE', texto: 'Buenos días' }],
       }),
     });
     expect(respuesta.status).toBe(201);

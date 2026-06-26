@@ -51,7 +51,7 @@ describe('ApiAuditoria', () => {
       ruta: '/api/llamadas',
       cuerpo: {
         agenteId: 'agente-099',
-        intervenciones: [
+        transcripcion: [
           { rol: 'AGENTE', texto: 'Buenos días, le atiende soporte' },
           { rol: 'CLIENTE', texto: 'Tengo una consulta' },
         ],
@@ -68,7 +68,7 @@ describe('ApiAuditoria', () => {
     const alta = await api.manejar({
       metodo: 'POST',
       ruta: '/api/llamadas',
-      cuerpo: { agenteId: 'agente-099', intervenciones: [{ rol: 'AGENTE', texto: 'Hola' }] },
+      cuerpo: { agenteId: 'agente-099', transcripcion: [{ rol: 'AGENTE', texto: 'Hola' }] },
     });
     const id = (alta.cuerpo as LlamadaDto).id;
     const lista = await api.manejar({ metodo: 'GET', ruta: '/api/llamadas' });
@@ -80,7 +80,7 @@ describe('ApiAuditoria', () => {
     const respuesta = await api.manejar({
       metodo: 'POST',
       ruta: '/api/llamadas',
-      cuerpo: { intervenciones: [] },
+      cuerpo: { transcripcion: [] },
     });
     expect(respuesta.estado).toBe(400);
   });
@@ -89,7 +89,7 @@ describe('ApiAuditoria', () => {
     const respuesta = await api.manejar({
       metodo: 'POST',
       ruta: '/api/llamadas',
-      cuerpo: { agenteId: 'agente-099', intervenciones: [{ rol: 'SUPERVISOR', texto: 'Hola' }] },
+      cuerpo: { agenteId: 'agente-099', transcripcion: [{ rol: 'SUPERVISOR', texto: 'Hola' }] },
     });
     expect(respuesta.estado).toBe(400);
   });
