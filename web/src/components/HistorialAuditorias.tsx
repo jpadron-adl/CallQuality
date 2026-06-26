@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
+import { FormularioRevision } from '@/components/FormularioRevision';
 import { formatearFechaHora } from '@/lib/formato';
+import type { NuevaRevision } from '@/api/tipos';
 
 export interface HistorialAuditoriasProps {
   /** Auditorías de la llamada en orden de creación (la primera es la más antigua). */
@@ -15,6 +17,10 @@ export interface HistorialAuditoriasProps {
   readonly onReauditar?: (llamadaId: string) => void;
   /** Indica que hay una re-auditoría en curso (deshabilita el botón). */
   readonly reauditando?: boolean;
+  /** Si se proporciona, cada auditoría no revisada ofrece un formulario para revisarla. */
+  readonly onRevisar?: (auditoriaId: string, revision: NuevaRevision) => void;
+  /** Indica que hay una revisión en curso (deshabilita el formulario). */
+  readonly revisando?: boolean;
 }
 
 /** Tono del badge de puntuación: verde si alta, ámbar si media, rojo si baja. */
@@ -35,6 +41,8 @@ export function HistorialAuditorias({
   llamadaId,
   onReauditar,
   reauditando = false,
+  onRevisar,
+  revisando = false,
 }: HistorialAuditoriasProps): React.JSX.Element {
   const [expandidas, setExpandidas] = useState<ReadonlySet<string>>(new Set());
 
@@ -91,8 +99,15 @@ export function HistorialAuditorias({
                 </div>
               </CardHeader>
               {expandida && (
-                <CardContent>
+                <CardContent className="flex flex-col gap-4">
                   <DetalleAuditoria resultado={auditoria} />
+                  {onRevisar !== undefined && auditoria.revision === null && (
+                    <FormularioRevision
+                      resultado={auditoria}
+                      onRevisar={onRevisar}
+                      revisando={revisando}
+                    />
+                  )}
                 </CardContent>
               )}
             </Card>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { crearClienteAuditoria, type ClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { LlamadaDto, NuevaLlamada, NuevaRevision, ResultadoAuditoriaDto } from '@/api/tipos';
 import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
@@ -32,6 +32,8 @@ function mensajeDeError(error: unknown): string {
 interface AccionesPanel {
   readonly onReauditar: (llamadaId: string) => void;
   readonly reauditando: boolean;
+  readonly onRevisar: (auditoriaId: string, revision: NuevaRevision) => void;
+  readonly revisando: boolean;
 }
 
 /** Renderiza el contenido del panel de detalle según su estado. */
@@ -48,6 +50,8 @@ function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JS
           llamadaId={panel.llamadaId}
           onReauditar={acciones.onReauditar}
           reauditando={acciones.reauditando}
+          onRevisar={acciones.onRevisar}
+          revisando={acciones.revisando}
         />
       );
     case 'vacio':
@@ -70,6 +74,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
   const [panel, setPanel] = useState<PanelDerecho>({ tipo: 'vacio' });
   const [llamadaEnCurso, setLlamadaEnCurso] = useState<string | null>(null);
   const [reauditando, setReauditando] = useState(false);
+  const [revisando, setRevisando] = useState(false);
   const [registrando, setRegistrando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +128,22 @@ export function App({ cliente }: AppProps): React.JSX.Element {
         .catch((err: unknown) => setError(mensajeDeError(err)));
     },
     [api],
+  );
+
+  const revisar = useCallback(
+    (auditoriaId: string, nueva: NuevaRevision): void => {
+      if (panel.tipo !== 'historial') return;
+      const { llamadaId } = panel;
+      setRevisando(true);
+      setError(null);
+      api
+        .revisarAuditoria(auditoriaId, nueva)
+        .then(() => api.listarAuditorias(llamadaId))
+        .then((auditorias) => setPanel({ tipo: 'historial', llamadaId, auditorias }))
+        .catch((err: unknown) => setError(mensajeDeError(err)))
+        .finally(() => setRevisando(false));
+    },
+    [api, panel],
   );
 
   const reauditar = useCallback(
@@ -184,7 +205,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
           <h2 className="text-lg font-medium">
             {panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
           </h2>
-          {renderizarPanel(panel, { onReauditar: reauditar, reauditando })}
+          {renderizarPanel(panel, { onReauditar: reauditar, reauditando, onRevisar: revisar, revisando })}
         </section>
       </div>
     </main>

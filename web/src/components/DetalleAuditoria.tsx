@@ -49,6 +49,24 @@ export function DetalleAuditoria({ resultado }: DetalleAuditoriaProps): React.JS
         </CardHeader>
       </Card>
 
+      {resultado.revision !== null && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Revisión</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium">
+              {`Revisada por ${resultado.revision.revisor} el ${formatearFechaHora(resultado.revision.fechaRevision)}`}
+              {resultado.revision.correcciones.length > 0 &&
+                ` · ${resultado.revision.correcciones.length} corrección(es)`}
+            </p>
+            {resultado.revision.comentario !== null && (
+              <p className="mt-1 text-sm text-[var(--color-tenue)]">{resultado.revision.comentario}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Cumplimiento de protocolos</CardTitle>
