@@ -115,3 +115,83 @@ describe('ResultadoAuditoria', () => {
     expect(a.esIgualA(c)).toBe(false);
   });
 });
+
+describe('ResultadoAuditoria · revisión humana (human-in-the-loop)', () => {
+  const fechaRevision = new Date('2026-06-26T10:00:00.000Z');
+
+  it('una auditoría recién creada no está revisada', () => {
+    const resultado = crearResultado();
+    expect(resultado.estaRevisada()).toBe(false);
+    expect(resultado.revision).toBeNull();
+  });
+
+  it('al revisarla queda marcada y registra revisor, fecha y comentario', () => {
+    const resultado = crearResultado();
+    resultado.revisar({ revisor: 'supervisor-01', fechaRevision, comentario: 'Conforme con el análisis.' });
+
+    expect(resultado.estaRevisada()).toBe(true);
+    expect(resultado.revision?.revisor).toBe('supervisor-01');
+    expect(resultado.revision?.fechaRevision.toISOString()).toBe('2026-06-26T10:00:00.000Z');
+    expect(resultado.revision?.comentario).toBe('Conforme con el análisis.');
+  });
+
+  it('sin comentario, la revisión lo deja en null', () => {
+    const resultado = crearResultado();
+    resultado.revisar({ revisor: 'supervisor-01', fechaRevision });
+    expect(resultado.revision?.comentario).toBeNull();
+  });
+
+  it('una corrección recalcula la puntuación efectiva preservando el veredicto del LLM', () => {
+    const resultado = crearResultado({
+      evaluaciones: [
+        evaluacion(TipoProtocolo.SALUDO_INICIAL, true),
+        evaluacion(TipoProtocolo.DESPEDIDA, false),
+      ],
+    });
+    expect(resultado.puntuacion().valor).toBe(50);
+
+    resultado.revisar({
+      revisor: 'supervisor-01',
+      fechaRevision,
+      correcciones: [
+        EvaluacionProtocolo.crear(
+          TipoProtocolo.DESPEDIDA,
+          true,
+          Evidencia.crear('Sí se despide en el último turno.'),
+        ),
+      ],
+    });
+
+    expect(resultado.puntuacion().valor).toBe(100);
+    const original = resultado.evaluaciones.find((e) => e.tipo.esIgualA(TipoProtocolo.DESPEDIDA));
+    expect(original?.cumplido).toBe(false);
+    const efectiva = resultado
+      .evaluacionesEfectivas()
+      .find((e) => e.tipo.esIgualA(TipoProtocolo.DESPEDIDA));
+    expect(efectiva?.cumplido).toBe(true);
+  });
+
+  it('rechaza una corrección sobre un protocolo que no fue evaluado', () => {
+    const resultado = crearResultado();
+    expect(() =>
+      resultado.revisar({
+        revisor: 'supervisor-01',
+        fechaRevision,
+        correcciones: [evaluacion(TipoProtocolo.OFERTA_OBLIGATORIA, true)],
+      }),
+    ).toThrow(DomainError);
+  });
+
+  it('rechaza un revisor vacío', () => {
+    const resultado = crearResultado();
+    expect(() => resultado.revisar({ revisor: '   ', fechaRevision })).toThrow(DomainError);
+  });
+
+  it('la revisión es inmutable frente a la fecha devuelta', () => {
+    const resultado = crearResultado();
+    resultado.revisar({ revisor: 'supervisor-01', fechaRevision });
+    const fecha = resultado.revision!.fechaRevision;
+    fecha.setFullYear(1999);
+    expect(resultado.revision!.fechaRevision.getFullYear()).toBe(2026);
+  });
+});
