@@ -7,6 +7,16 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-26
+
+### Added
+- Revisión humana de las auditorías (human-in-the-loop), desarrollada con TDD estricto (micro-commits rojo-verde-refactor) a través de todas las capas: la IA propone y el supervisor dispone. Un revisor puede confirmar una auditoría, dejar un comentario y **corregir el veredicto del LLM protocolo a protocolo**; se conserva siempre la evaluación original del modelo (trazabilidad) y la puntuación se recalcula sobre las evaluaciones efectivas.
+  - Dominio: nuevo value object `RevisionAuditoria` y comportamiento `revisar()` en el agregado `ResultadoAuditoria`, que valida que las correcciones se refieran a protocolos realmente evaluados y expone `evaluacionesEfectivas()`; la puntuación pasa a calcularse sobre ellas.
+  - Aplicación: caso de uso `RevisarAuditoria` y nuevo método de puerto `AuditoriaRepository.obtenerPorId`. El adaptador en memoria adopta semántica de upsert por identidad para no duplicar la auditoría revisada.
+  - Infraestructura: persistencia de la revisión en SQLite (columna `revision` JSON con migración idempotente para bases ya existentes); el mapeador la serializa y rehidrata.
+  - API HTTP: nueva ruta `POST /api/auditorias/:id/revision` (validada con Zod; 404 si la auditoría no existe y 400 ante datos de dominio inválidos). El DTO de auditoría incorpora la revisión y expone las evaluaciones efectivas.
+  - Dashboard: `FormularioRevision` (identifica al revisor, comentario y corrección del veredicto por protocolo), sello de revisión en `DetalleAuditoria` y orquestación en `App` del flujo revisar → recargar el historial desde el detalle expandido de cada auditoría.
+
 ## [0.12.0] - 2026-06-26
 
 ### Changed
