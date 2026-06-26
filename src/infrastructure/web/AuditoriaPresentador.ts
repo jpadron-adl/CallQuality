@@ -23,6 +23,14 @@ export interface AlertaDto {
   readonly evidencia: string;
 }
 
+/** Representación serializable de la revisión humana de una auditoría. */
+export interface RevisionDto {
+  readonly revisor: string;
+  readonly fechaRevision: string;
+  readonly comentario: string | null;
+  readonly correcciones: EvaluacionDto[];
+}
+
 /** Representación serializable del resultado de una auditoría para la API. */
 export interface ResultadoAuditoriaDto {
   readonly id: string;
@@ -30,8 +38,11 @@ export interface ResultadoAuditoriaDto {
   readonly fechaAuditoria: string;
   readonly puntuacion: number;
   readonly tieneAlertas: boolean;
+  /** Evaluaciones efectivas (con las correcciones del revisor aplicadas, si las hay). */
   readonly evaluaciones: EvaluacionDto[];
   readonly alertas: AlertaDto[];
+  /** Revisión humana, o null si la auditoría no ha sido revisada. */
+  readonly revision: RevisionDto | null;
 }
 
 /**
@@ -48,22 +59,40 @@ export function presentarLlamada(llamada: Llamada): LlamadaDto {
   };
 }
 
+function presentarEvaluacion(evaluacion: {
+  tipo: { valor: string };
+  cumplido: boolean;
+  evidencia: { valor: string };
+}): EvaluacionDto {
+  return {
+    protocolo: evaluacion.tipo.valor,
+    cumplido: evaluacion.cumplido,
+    evidencia: evaluacion.evidencia.valor,
+  };
+}
+
 export function presentarResultadoAuditoria(resultado: ResultadoAuditoria): ResultadoAuditoriaDto {
+  const revision = resultado.revision;
   return {
     id: resultado.id.valor,
     llamadaId: resultado.llamadaId.valor,
     fechaAuditoria: resultado.fechaAuditoria.toISOString(),
     puntuacion: resultado.puntuacion().valor,
     tieneAlertas: resultado.tieneAlertas(),
-    evaluaciones: resultado.evaluaciones.map((evaluacion) => ({
-      protocolo: evaluacion.tipo.valor,
-      cumplido: evaluacion.cumplido,
-      evidencia: evaluacion.evidencia.valor,
-    })),
+    evaluaciones: resultado.evaluacionesEfectivas().map(presentarEvaluacion),
     alertas: resultado.alertas.map((alerta) => ({
       tipo: alerta.tipo.valor,
       severidad: alerta.severidad.valor,
       evidencia: alerta.evidencia.valor,
     })),
+    revision:
+      revision === null
+        ? null
+        : {
+            revisor: revision.revisor,
+            fechaRevision: revision.fechaRevision.toISOString(),
+            comentario: revision.comentario,
+            correcciones: revision.correcciones.map(presentarEvaluacion),
+          },
   };
 }

@@ -8,8 +8,14 @@ import {
   registrarLlamadaSchema,
   aComandoRegistrarLlamada,
 } from '@infrastructure/web/RegistrarLlamadaSchema';
+import {
+  revisarAuditoriaSchema,
+  aComandoRevisarAuditoria,
+} from '@infrastructure/web/RevisarAuditoriaSchema';
+import { AuditoriaNoEncontradaError } from '@application/shared/AuditoriaNoEncontradaError';
 
 const RUTA_AUDITORIAS = /^\/api\/llamadas\/([^/]+)\/auditorias$/;
+const RUTA_REVISION = /^\/api\/auditorias\/([^/]+)\/revision$/;
 
 /**
  * Adaptador de entrada HTTP (controlador) de la API de auditoría. Traduce peticiones
@@ -37,6 +43,13 @@ export class ApiAuditoria {
       return this.metodoNoPermitido();
     }
 
+    const revision = RUTA_REVISION.exec(ruta);
+    if (revision !== null) {
+      const id = decodeURIComponent(revision[1]!);
+      if (peticion.metodo === 'POST') return this.revisarAuditoria(id, peticion.cuerpo);
+      return this.metodoNoPermitido();
+    }
+
     return { estado: 404, cuerpo: { error: `Ruta no encontrada: ${ruta}` } };
   }
 
@@ -57,6 +70,28 @@ export class ApiAuditoria {
     } catch (error) {
       // El dominio rechaza datos que la validación sintáctica no cubre (rol fuera
       // del catálogo): es un error del cliente, no un fallo interno del servidor.
+      if (error instanceof DomainError) {
+        return { estado: 400, cuerpo: { error: error.message } };
+      }
+      throw error;
+    }
+  }
+
+  private async revisarAuditoria(id: string, cuerpo: unknown): Promise<RespuestaHttp> {
+    const validacion = revisarAuditoriaSchema.safeParse(cuerpo);
+    if (!validacion.success) {
+      return { estado: 400, cuerpo: { error: 'Cuerpo de la petición no válido.' } };
+    }
+    try {
+      const comando = aComandoRevisarAuditoria(id, validacion.data);
+      const resultado = await this.contexto.revisarAuditoria.ejecutar(comando);
+      return { estado: 201, cuerpo: presentarResultadoAuditoria(resultado) };
+    } catch (error) {
+      if (error instanceof AuditoriaNoEncontradaError) {
+        return { estado: 404, cuerpo: { error: error.message } };
+      }
+      // El dominio rechaza datos que la validación sintáctica no cubre (protocolo fuera
+      // del catálogo, corrección sobre un protocolo no evaluado): es un error del cliente.
       if (error instanceof DomainError) {
         return { estado: 400, cuerpo: { error: error.message } };
       }
