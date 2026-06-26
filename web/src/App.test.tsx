@@ -28,6 +28,14 @@ function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAudi
     listarAuditorias: vi.fn().mockResolvedValue([]),
     registrarLlamada: vi.fn().mockResolvedValue(LLAMADAS[0]),
     revisarAuditoria: vi.fn().mockResolvedValue(RESULTADO),
+    obtenerInformeAgente: vi.fn().mockResolvedValue({
+      agenteId: 'agente-7',
+      numeroLlamadasAuditadas: 0,
+      puntuacionMedia: 0,
+      protocolosMasIncumplidos: [],
+      totalAlertas: 0,
+      alertasPorSeveridad: [],
+    }),
     ...sobrescribir,
   };
 }

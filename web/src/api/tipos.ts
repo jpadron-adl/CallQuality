@@ -67,6 +67,29 @@ export interface ResultadoAuditoriaDto {
   readonly revision: RevisionDto | null;
 }
 
+/** Recuento de cumplimiento de un protocolo en el informe de un agente. */
+export interface ProtocoloIncumplidoDto {
+  readonly protocolo: string;
+  readonly incumplimientos: number;
+  readonly evaluaciones: number;
+}
+
+/** Recuento de alertas por severidad en el informe de un agente. */
+export interface AlertasPorSeveridadDto {
+  readonly severidad: string;
+  readonly total: number;
+}
+
+/** Informe de desempeño de un agente, devuelto por `GET /api/agentes/:id/informe`. */
+export interface InformeAgenteDto {
+  readonly agenteId: string;
+  readonly numeroLlamadasAuditadas: number;
+  readonly puntuacionMedia: number;
+  readonly protocolosMasIncumplidos: readonly ProtocoloIncumplidoDto[];
+  readonly totalAlertas: number;
+  readonly alertasPorSeveridad: readonly AlertasPorSeveridadDto[];
+}
+
 /** Una corrección de un protocolo enviada al revisar una auditoría. */
 export interface CorreccionEntradaDto {
   readonly protocolo: string;

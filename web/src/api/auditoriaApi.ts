@@ -1,5 +1,11 @@
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, NuevaLlamada, NuevaRevision, ResultadoAuditoriaDto } from '@/api/tipos';
+import type {
+  InformeAgenteDto,
+  LlamadaDto,
+  NuevaLlamada,
+  NuevaRevision,
+  ResultadoAuditoriaDto,
+} from '@/api/tipos';
 
 /** Función `fetch` (inyectable para testear sin red ni dependencia del global). */
 export type FetchFn = (entrada: string, init?: RequestInit) => Promise<Response>;
@@ -18,6 +24,7 @@ export interface ClienteAuditoria {
   listarAuditorias(llamadaId: string): Promise<ResultadoAuditoriaDto[]>;
   registrarLlamada(nueva: NuevaLlamada): Promise<LlamadaDto>;
   revisarAuditoria(auditoriaId: string, revision: NuevaRevision): Promise<ResultadoAuditoriaDto>;
+  obtenerInformeAgente(agenteId: string): Promise<InformeAgenteDto>;
 }
 
 /**
@@ -64,6 +71,9 @@ export function crearClienteAuditoria(opciones: OpcionesClienteAuditoria = {}): 
         'POST',
         revision,
       );
+    },
+    obtenerInformeAgente(agenteId) {
+      return pedir<InformeAgenteDto>(`/api/agentes/${encodeURIComponent(agenteId)}/informe`, 'GET');
     },
   };
 }
