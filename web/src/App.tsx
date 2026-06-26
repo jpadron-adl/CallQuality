@@ -5,7 +5,9 @@ import type { LlamadaDto, NuevaLlamada, NuevaRevision, ResultadoAuditoriaDto } f
 import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
+import { InformeAgente } from '@/components/InformeAgente';
 import { CargaLlamadaJson } from '@/components/CargaLlamadaJson';
+import type { InformeAgenteDto } from '@/api/tipos';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
@@ -16,12 +18,21 @@ export interface AppProps {
 type PanelDerecho =
   | { readonly tipo: 'vacio' }
   | { readonly tipo: 'cargando-historial' }
+  | { readonly tipo: 'cargando-informe' }
   | { readonly tipo: 'resultado'; readonly resultado: ResultadoAuditoriaDto }
   | {
       readonly tipo: 'historial';
       readonly llamadaId: string;
       readonly auditorias: readonly ResultadoAuditoriaDto[];
-    };
+    }
+  | { readonly tipo: 'informe'; readonly informe: InformeAgenteDto };
+
+/** Título de la sección de detalle según el tipo de panel mostrado. */
+function tituloPanel(tipo: PanelDerecho['tipo']): string {
+  if (tipo === 'historial' || tipo === 'cargando-historial') return 'Historial de auditorías';
+  if (tipo === 'informe' || tipo === 'cargando-informe') return 'Informe del agente';
+  return 'Resultado de la auditoría';
+}
 
 /** Traduce cualquier fallo en un mensaje legible para el profesor. */
 function mensajeDeError(error: unknown): string {
@@ -41,6 +52,10 @@ function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JS
   switch (panel.tipo) {
     case 'cargando-historial':
       return <p className="text-sm text-[var(--color-tenue)]">Cargando historial…</p>;
+    case 'cargando-informe':
+      return <p className="text-sm text-[var(--color-tenue)]">Cargando informe…</p>;
+    case 'informe':
+      return <InformeAgente informe={panel.informe} />;
     case 'resultado':
       return <DetalleAuditoria resultado={panel.resultado} />;
     case 'historial':
@@ -146,6 +161,18 @@ export function App({ cliente }: AppProps): React.JSX.Element {
     [api, panel],
   );
 
+  const verInforme = useCallback(
+    (agenteId: string): void => {
+      setError(null);
+      setPanel({ tipo: 'cargando-informe' });
+      api
+        .obtenerInformeAgente(agenteId)
+        .then((informe) => setPanel({ tipo: 'informe', informe }))
+        .catch((err: unknown) => setError(mensajeDeError(err)));
+    },
+    [api],
+  );
+
   const reauditar = useCallback(
     (llamadaId: string): void => {
       setReauditando(true);
@@ -194,17 +221,13 @@ export function App({ cliente }: AppProps): React.JSX.Element {
               onAuditar={auditar}
               llamadaEnCurso={llamadaEnCurso}
               onVerHistorial={verHistorial}
+              onVerInforme={verInforme}
             />
           )}
         </section>
 
-        <section
-          className="flex flex-col gap-3"
-          aria-label={panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
-        >
-          <h2 className="text-lg font-medium">
-            {panel.tipo === 'historial' ? 'Historial de auditorías' : 'Resultado de la auditoría'}
-          </h2>
+        <section className="flex flex-col gap-3" aria-label={tituloPanel(panel.tipo)}>
+          <h2 className="text-lg font-medium">{tituloPanel(panel.tipo)}</h2>
           {renderizarPanel(panel, { onReauditar: reauditar, reauditando, onRevisar: revisar, revisando })}
         </section>
       </div>

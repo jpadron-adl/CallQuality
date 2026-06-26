@@ -11,6 +11,8 @@ export interface ListaLlamadasProps {
   readonly llamadaEnCurso?: string | null;
   /** Si se proporciona, muestra un botón para consultar el historial de la llamada. */
   readonly onVerHistorial?: (llamadaId: string) => void;
+  /** Si se proporciona, muestra un botón para ver el informe de desempeño del agente. */
+  readonly onVerInforme?: (agenteId: string) => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function ListaLlamadas({
   onAuditar,
   llamadaEnCurso,
   onVerHistorial,
+  onVerInforme,
 }: ListaLlamadasProps): React.JSX.Element {
   if (llamadas.length === 0) {
     return (
@@ -55,6 +58,15 @@ export function ListaLlamadas({
                       onClick={() => onVerHistorial(llamada.id)}
                     >
                       Historial
+                    </Button>
+                  )}
+                  {onVerInforme !== undefined && (
+                    <Button
+                      variante="contorno"
+                      tamano="pequeno"
+                      onClick={() => onVerInforme(llamada.agenteId)}
+                    >
+                      Informe
                     </Button>
                   )}
                   <Button
