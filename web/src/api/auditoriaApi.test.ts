@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { crearClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
-import type { LlamadaDto, NuevaLlamada, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { LlamadaDto, NuevaLlamada, NuevaRevision, ResultadoAuditoriaDto } from '@/api/tipos';
 
 /** Construye una respuesta `fetch` falsa con cuerpo JSON y estado configurables. */
 function respuestaJson(cuerpo: unknown, estado = 200): Response {
@@ -26,6 +26,7 @@ const RESULTADO: ResultadoAuditoriaDto = {
   tieneAlertas: true,
   evaluaciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: true, evidencia: 'Buenos días...' }],
   alertas: [{ tipo: 'LENGUAJE_INADECUADO', severidad: 'ALTA', evidencia: '...' }],
+  revision: null,
 };
 
 describe('crearClienteAuditoria', () => {
@@ -84,6 +85,31 @@ describe('crearClienteAuditoria', () => {
       }),
     );
     expect(creada).toEqual(LLAMADA);
+  });
+
+  it('revisa una auditoría con POST /api/auditorias/:id/revision y el cuerpo en JSON', async () => {
+    const revisado: ResultadoAuditoriaDto = {
+      ...RESULTADO,
+      revision: { revisor: 'supervisor-1', fechaRevision: '2026-06-26T10:00:00.000Z', comentario: null, correcciones: [] },
+    };
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson(revisado, 201));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+    const nueva: NuevaRevision = {
+      revisor: 'supervisor-1',
+      correcciones: [{ protocolo: 'SALUDO_INICIAL', cumplido: false, evidencia: 'No saluda.' }],
+    };
+
+    const resultado = await api.revisarAuditoria('auditoria-1', nueva);
+
+    expect(fetchFalso).toHaveBeenCalledWith(
+      '/api/auditorias/auditoria-1/revision',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(nueva),
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      }),
+    );
+    expect(resultado.revision?.revisor).toBe('supervisor-1');
   });
 
   it('propaga un ApiError 400 cuando el alta es rechazada por la API', async () => {
