@@ -4,7 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { App } from '@/App';
 import { ApiError } from '@/api/ApiError';
 import type { ClienteAuditoria } from '@/api/auditoriaApi';
-import type { ComparacionAuditoriasDto, LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
+import type {
+  ComparacionAuditoriasDto,
+  LlamadaDto,
+  ResultadoAuditoriaDto,
+  ResumenLoteDto,
+} from '@/api/tipos';
 
 const LLAMADAS: LlamadaDto[] = [
   { id: 'llamada-1', agenteId: 'agente-7', fechaInicio: '2026-06-20T09:05:00.000Z', numeroIntervenciones: 4 },
@@ -47,6 +52,13 @@ function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAudi
       alertasAparecidas: [],
       alertasDesaparecidas: [],
     } satisfies ComparacionAuditoriasDto),
+    auditarLote: vi.fn().mockResolvedValue({
+      totalPendientes: 0,
+      auditadas: 0,
+      fallidas: 0,
+      resultados: [],
+      fallos: [],
+    } satisfies ResumenLoteDto),
     ...sobrescribir,
   };
 }
@@ -191,6 +203,24 @@ describe('App', () => {
 
     expect(cliente.compararAuditorias).toHaveBeenCalledWith('auditoria-1', 'auditoria-2');
     expect(await screen.findByText('+25')).toBeInTheDocument();
+  });
+
+  it('audita el lote de pendientes al pulsar su botón y muestra el resumen', async () => {
+    const cliente = clienteFalso({
+      auditarLote: vi.fn().mockResolvedValue({
+        totalPendientes: 1,
+        auditadas: 1,
+        fallidas: 0,
+        resultados: [RESULTADO],
+        fallos: [],
+      } satisfies ResumenLoteDto),
+    });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /auditar pendientes/i }));
+
+    expect(cliente.auditarLote).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText(/1 auditadas/i)).toBeInTheDocument();
   });
 
   it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {
