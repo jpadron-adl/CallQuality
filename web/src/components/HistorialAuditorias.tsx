@@ -21,6 +21,10 @@ export interface HistorialAuditoriasProps {
   readonly onRevisar?: (auditoriaId: string, revision: NuevaRevision) => void;
   /** Indica que hay una revisión en curso (deshabilita el formulario). */
   readonly revisando?: boolean;
+  /** Si se proporciona, permite seleccionar dos auditorías y compararlas. */
+  readonly onComparar?: (auditoriaIdA: string, auditoriaIdB: string) => void;
+  /** Indica que hay una comparación en curso (deshabilita el botón). */
+  readonly comparando?: boolean;
 }
 
 /** Tono del badge de puntuación: verde si alta, ámbar si media, rojo si baja. */
@@ -43,8 +47,11 @@ export function HistorialAuditorias({
   reauditando = false,
   onRevisar,
   revisando = false,
+  onComparar,
+  comparando = false,
 }: HistorialAuditoriasProps): React.JSX.Element {
   const [expandidas, setExpandidas] = useState<ReadonlySet<string>>(new Set());
+  const [seleccionadas, setSeleccionadas] = useState<ReadonlySet<string>>(new Set());
 
   const alternar = (id: string): void => {
     setExpandidas((previas) => {
@@ -58,15 +65,50 @@ export function HistorialAuditorias({
     });
   };
 
+  const alternarSeleccion = (id: string): void => {
+    setSeleccionadas((previas) => {
+      const siguiente = new Set(previas);
+      if (siguiente.has(id)) {
+        siguiente.delete(id);
+      } else {
+        siguiente.add(id);
+      }
+      return siguiente;
+    });
+  };
+
   const puedeReauditar = onReauditar !== undefined && llamadaId !== undefined;
+  const puedeComparar = onComparar !== undefined;
+
+  /** Lanza la comparación con las dos seleccionadas, ordenadas por antigüedad (orden de la lista). */
+  const comparar = (): void => {
+    const idsOrdenados = auditorias
+      .filter((auditoria) => seleccionadas.has(auditoria.id))
+      .map((auditoria) => auditoria.id);
+    if (onComparar !== undefined && idsOrdenados.length === 2) {
+      onComparar(idsOrdenados[0]!, idsOrdenados[1]!);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-3">
-      {puedeReauditar && (
-        <div className="flex justify-end">
-          <Button tamano="pequeno" disabled={reauditando} onClick={() => onReauditar(llamadaId)}>
-            {reauditando ? 'Re-auditando…' : 'Re-auditar'}
-          </Button>
+      {(puedeReauditar || puedeComparar) && (
+        <div className="flex justify-end gap-2">
+          {puedeComparar && (
+            <Button
+              variante="contorno"
+              tamano="pequeno"
+              disabled={comparando || seleccionadas.size !== 2}
+              onClick={comparar}
+            >
+              {comparando ? 'Comparando…' : 'Comparar'}
+            </Button>
+          )}
+          {puedeReauditar && (
+            <Button tamano="pequeno" disabled={reauditando} onClick={() => onReauditar(llamadaId)}>
+              {reauditando ? 'Re-auditando…' : 'Re-auditar'}
+            </Button>
+          )}
         </div>
       )}
 
@@ -82,11 +124,21 @@ export function HistorialAuditorias({
           <li key={auditoria.id}>
             <Card>
               <CardHeader className="flex-row items-center justify-between gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <CardTitle>Auditoría {indice + 1}</CardTitle>
-                  <span className="text-xs text-[var(--color-tenue)]">
-                    {formatearFechaHora(auditoria.fechaAuditoria)}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {puedeComparar && (
+                    <input
+                      type="checkbox"
+                      aria-label={`Seleccionar Auditoría ${indice + 1} para comparar`}
+                      checked={seleccionadas.has(auditoria.id)}
+                      onChange={() => alternarSeleccion(auditoria.id)}
+                    />
+                  )}
+                  <div className="flex flex-col gap-0.5">
+                    <CardTitle>Auditoría {indice + 1}</CardTitle>
+                    <span className="text-xs text-[var(--color-tenue)]">
+                      {formatearFechaHora(auditoria.fechaAuditoria)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge tono={tonoPuntuacion(auditoria.puntuacion)}>{auditoria.puntuacion} / 100</Badge>
