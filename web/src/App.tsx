@@ -6,8 +6,9 @@ import { ListaLlamadas } from '@/components/ListaLlamadas';
 import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
 import { InformeAgente } from '@/components/InformeAgente';
+import { ComparacionAuditorias } from '@/components/ComparacionAuditorias';
 import { CargaLlamadaJson } from '@/components/CargaLlamadaJson';
-import type { InformeAgenteDto } from '@/api/tipos';
+import type { ComparacionAuditoriasDto, InformeAgenteDto } from '@/api/tipos';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
@@ -19,18 +20,21 @@ type PanelDerecho =
   | { readonly tipo: 'vacio' }
   | { readonly tipo: 'cargando-historial' }
   | { readonly tipo: 'cargando-informe' }
+  | { readonly tipo: 'cargando-comparacion' }
   | { readonly tipo: 'resultado'; readonly resultado: ResultadoAuditoriaDto }
   | {
       readonly tipo: 'historial';
       readonly llamadaId: string;
       readonly auditorias: readonly ResultadoAuditoriaDto[];
     }
-  | { readonly tipo: 'informe'; readonly informe: InformeAgenteDto };
+  | { readonly tipo: 'informe'; readonly informe: InformeAgenteDto }
+  | { readonly tipo: 'comparacion'; readonly comparacion: ComparacionAuditoriasDto };
 
 /** Título de la sección de detalle según el tipo de panel mostrado. */
 function tituloPanel(tipo: PanelDerecho['tipo']): string {
   if (tipo === 'historial' || tipo === 'cargando-historial') return 'Historial de auditorías';
   if (tipo === 'informe' || tipo === 'cargando-informe') return 'Informe del agente';
+  if (tipo === 'comparacion' || tipo === 'cargando-comparacion') return 'Comparación de auditorías';
   return 'Resultado de la auditoría';
 }
 
@@ -45,6 +49,8 @@ interface AccionesPanel {
   readonly reauditando: boolean;
   readonly onRevisar: (auditoriaId: string, revision: NuevaRevision) => void;
   readonly revisando: boolean;
+  readonly onComparar: (auditoriaIdA: string, auditoriaIdB: string) => void;
+  readonly comparando: boolean;
 }
 
 /** Renderiza el contenido del panel de detalle según su estado. */
@@ -54,8 +60,12 @@ function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JS
       return <p className="text-sm text-[var(--color-tenue)]">Cargando historial…</p>;
     case 'cargando-informe':
       return <p className="text-sm text-[var(--color-tenue)]">Cargando informe…</p>;
+    case 'cargando-comparacion':
+      return <p className="text-sm text-[var(--color-tenue)]">Cargando comparación…</p>;
     case 'informe':
       return <InformeAgente informe={panel.informe} />;
+    case 'comparacion':
+      return <ComparacionAuditorias comparacion={panel.comparacion} />;
     case 'resultado':
       return <DetalleAuditoria resultado={panel.resultado} />;
     case 'historial':
@@ -67,6 +77,8 @@ function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JS
           reauditando={acciones.reauditando}
           onRevisar={acciones.onRevisar}
           revisando={acciones.revisando}
+          onComparar={acciones.onComparar}
+          comparando={acciones.comparando}
         />
       );
     case 'vacio':
@@ -90,6 +102,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
   const [llamadaEnCurso, setLlamadaEnCurso] = useState<string | null>(null);
   const [reauditando, setReauditando] = useState(false);
   const [revisando, setRevisando] = useState(false);
+  const [comparando, setComparando] = useState(false);
   const [registrando, setRegistrando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -173,6 +186,19 @@ export function App({ cliente }: AppProps): React.JSX.Element {
     [api],
   );
 
+  const comparar = useCallback(
+    (auditoriaIdA: string, auditoriaIdB: string): void => {
+      setComparando(true);
+      setError(null);
+      api
+        .compararAuditorias(auditoriaIdA, auditoriaIdB)
+        .then((comparacion) => setPanel({ tipo: 'comparacion', comparacion }))
+        .catch((err: unknown) => setError(mensajeDeError(err)))
+        .finally(() => setComparando(false));
+    },
+    [api],
+  );
+
   const reauditar = useCallback(
     (llamadaId: string): void => {
       setReauditando(true);
@@ -228,7 +254,14 @@ export function App({ cliente }: AppProps): React.JSX.Element {
 
         <section className="flex flex-col gap-3" aria-label={tituloPanel(panel.tipo)}>
           <h2 className="text-lg font-medium">{tituloPanel(panel.tipo)}</h2>
-          {renderizarPanel(panel, { onReauditar: reauditar, reauditando, onRevisar: revisar, revisando })}
+          {renderizarPanel(panel, {
+            onReauditar: reauditar,
+            reauditando,
+            onRevisar: revisar,
+            revisando,
+            onComparar: comparar,
+            comparando,
+          })}
         </section>
       </div>
     </main>
