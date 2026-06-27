@@ -7,8 +7,10 @@ import { DetalleAuditoria } from '@/components/DetalleAuditoria';
 import { HistorialAuditorias } from '@/components/HistorialAuditorias';
 import { InformeAgente } from '@/components/InformeAgente';
 import { ComparacionAuditorias } from '@/components/ComparacionAuditorias';
+import { ResumenLote } from '@/components/ResumenLote';
 import { CargaLlamadaJson } from '@/components/CargaLlamadaJson';
-import type { ComparacionAuditoriasDto, InformeAgenteDto } from '@/api/tipos';
+import { Button } from '@/components/ui/Button';
+import type { ComparacionAuditoriasDto, InformeAgenteDto, ResumenLoteDto } from '@/api/tipos';
 
 export interface AppProps {
   /** Cliente de la API; inyectable para pruebas. Por defecto, el cliente real. */
@@ -21,6 +23,7 @@ type PanelDerecho =
   | { readonly tipo: 'cargando-historial' }
   | { readonly tipo: 'cargando-informe' }
   | { readonly tipo: 'cargando-comparacion' }
+  | { readonly tipo: 'cargando-lote' }
   | { readonly tipo: 'resultado'; readonly resultado: ResultadoAuditoriaDto }
   | {
       readonly tipo: 'historial';
@@ -28,13 +31,15 @@ type PanelDerecho =
       readonly auditorias: readonly ResultadoAuditoriaDto[];
     }
   | { readonly tipo: 'informe'; readonly informe: InformeAgenteDto }
-  | { readonly tipo: 'comparacion'; readonly comparacion: ComparacionAuditoriasDto };
+  | { readonly tipo: 'comparacion'; readonly comparacion: ComparacionAuditoriasDto }
+  | { readonly tipo: 'lote'; readonly resumen: ResumenLoteDto };
 
 /** Título de la sección de detalle según el tipo de panel mostrado. */
 function tituloPanel(tipo: PanelDerecho['tipo']): string {
   if (tipo === 'historial' || tipo === 'cargando-historial') return 'Historial de auditorías';
   if (tipo === 'informe' || tipo === 'cargando-informe') return 'Informe del agente';
   if (tipo === 'comparacion' || tipo === 'cargando-comparacion') return 'Comparación de auditorías';
+  if (tipo === 'lote' || tipo === 'cargando-lote') return 'Resultado del lote';
   return 'Resultado de la auditoría';
 }
 
@@ -62,10 +67,14 @@ function renderizarPanel(panel: PanelDerecho, acciones: AccionesPanel): React.JS
       return <p className="text-sm text-[var(--color-tenue)]">Cargando informe…</p>;
     case 'cargando-comparacion':
       return <p className="text-sm text-[var(--color-tenue)]">Cargando comparación…</p>;
+    case 'cargando-lote':
+      return <p className="text-sm text-[var(--color-tenue)]">Auditando el lote…</p>;
     case 'informe':
       return <InformeAgente informe={panel.informe} />;
     case 'comparacion':
       return <ComparacionAuditorias comparacion={panel.comparacion} />;
+    case 'lote':
+      return <ResumenLote resumen={panel.resumen} />;
     case 'resultado':
       return <DetalleAuditoria resultado={panel.resultado} />;
     case 'historial':
@@ -103,6 +112,7 @@ export function App({ cliente }: AppProps): React.JSX.Element {
   const [reauditando, setReauditando] = useState(false);
   const [revisando, setRevisando] = useState(false);
   const [comparando, setComparando] = useState(false);
+  const [auditandoLote, setAuditandoLote] = useState(false);
   const [registrando, setRegistrando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -199,6 +209,20 @@ export function App({ cliente }: AppProps): React.JSX.Element {
     [api],
   );
 
+  const auditarLote = useCallback((): void => {
+    setAuditandoLote(true);
+    setError(null);
+    setPanel({ tipo: 'cargando-lote' });
+    api
+      .auditarLote()
+      .then((resumen) => {
+        setPanel({ tipo: 'lote', resumen });
+        return recargarLlamadas();
+      })
+      .catch((err: unknown) => setError(mensajeDeError(err)))
+      .finally(() => setAuditandoLote(false));
+  }, [api, recargarLlamadas]);
+
   const reauditar = useCallback(
     (llamadaId: string): void => {
       setReauditando(true);
@@ -238,7 +262,17 @@ export function App({ cliente }: AppProps): React.JSX.Element {
 
       <div className="grid gap-6 md:grid-cols-2">
         <section className="flex flex-col gap-3" aria-label="Llamadas pendientes">
-          <h2 className="text-lg font-medium">Llamadas pendientes</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-medium">Llamadas pendientes</h2>
+            <Button
+              variante="contorno"
+              tamano="pequeno"
+              disabled={auditandoLote}
+              onClick={auditarLote}
+            >
+              {auditandoLote ? 'Auditando…' : 'Auditar pendientes'}
+            </Button>
+          </div>
           {cargando ? (
             <p className="text-sm text-[var(--color-tenue)]">Cargando llamadas…</p>
           ) : (

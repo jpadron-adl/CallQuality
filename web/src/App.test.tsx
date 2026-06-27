@@ -73,7 +73,7 @@ describe('App', () => {
     const cliente = clienteFalso();
     render(<App cliente={cliente} />);
 
-    await userEvent.click(await screen.findByRole('button', { name: /auditar/i }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Auditar' }));
 
     expect(cliente.auditarLlamada).toHaveBeenCalledWith('llamada-1');
     expect(await screen.findByText('Puntuación de calidad')).toBeInTheDocument();
