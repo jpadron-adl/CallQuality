@@ -10,6 +10,7 @@ import { RegistrarLlamada } from '@application/use-cases/RegistrarLlamada';
 import { RevisarAuditoria } from '@application/use-cases/RevisarAuditoria';
 import { GenerarInformeAgente } from '@application/use-cases/GenerarInformeAgente';
 import { CompararAuditorias } from '@application/use-cases/CompararAuditorias';
+import { AuditarLote } from '@application/use-cases/AuditarLote';
 import { MockAnalisisService } from '@infrastructure/ia/MockAnalisisService';
 import { OpenAiAnalisisService } from '@infrastructure/ia/openai/OpenAiAnalisisService';
 import { OpenAiChatCompletions } from '@infrastructure/ia/openai/OpenAiChatCompletions';
@@ -32,6 +33,7 @@ export interface ContextoAplicacion {
   readonly revisarAuditoria: RevisarAuditoria;
   readonly generarInformeAgente: GenerarInformeAgente;
   readonly compararAuditorias: CompararAuditorias;
+  readonly auditarLote: AuditarLote;
   readonly llamadas: LlamadaRepository;
   readonly auditorias: AuditoriaRepository;
 }
@@ -61,6 +63,7 @@ export function construirContexto(config: AppConfig): ContextoAplicacion {
   const revisarAuditoria = new RevisarAuditoria(auditorias, reloj);
   const generarInformeAgente = new GenerarInformeAgente(llamadas, auditorias);
   const compararAuditorias = new CompararAuditorias(auditorias);
+  const auditarLote = new AuditarLote(llamadas, auditorias, auditarLlamada);
 
   return {
     auditarLlamada,
@@ -68,6 +71,7 @@ export function construirContexto(config: AppConfig): ContextoAplicacion {
     revisarAuditoria,
     generarInformeAgente,
     compararAuditorias,
+    auditarLote,
     llamadas,
     auditorias,
   };

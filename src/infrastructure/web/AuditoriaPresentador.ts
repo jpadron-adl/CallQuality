@@ -2,6 +2,7 @@ import type { Llamada } from '@domain/llamada/Llamada';
 import type { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
 import type { InformeAgente } from '@domain/auditoria/InformeAgente';
 import type { ComparacionAuditorias } from '@domain/auditoria/ComparacionAuditorias';
+import type { ResumenLote } from '@application/use-cases/AuditarLote';
 
 /** Representación serializable de una llamada para la API. */
 export interface LlamadaDto {
@@ -96,6 +97,21 @@ export interface ComparacionAuditoriasDto {
   readonly alertasDesaparecidas: AlertaComparadaDto[];
 }
 
+/** Llamada del lote cuya auditoría no pudo completarse, con el motivo del fallo. */
+export interface FalloAuditoriaLoteDto {
+  readonly llamadaId: string;
+  readonly motivo: string;
+}
+
+/** Representación serializable del resumen de una auditoría en lote. */
+export interface ResumenLoteDto {
+  readonly totalPendientes: number;
+  readonly auditadas: number;
+  readonly fallidas: number;
+  readonly resultados: ResultadoAuditoriaDto[];
+  readonly fallos: FalloAuditoriaLoteDto[];
+}
+
 /**
  * Presentadores: traducen los agregados del dominio a DTOs planos y serializables.
  * Aíslan la forma de la respuesta HTTP de la estructura interna del dominio, de modo
@@ -156,6 +172,16 @@ export function presentarInformeAgente(informe: InformeAgente): InformeAgenteDto
     protocolosMasIncumplidos: informe.protocolosMasIncumplidos.map((p) => ({ ...p })),
     totalAlertas: informe.totalAlertas,
     alertasPorSeveridad: informe.alertasPorSeveridad.map((a) => ({ ...a })),
+  };
+}
+
+export function presentarResumenLote(resumen: ResumenLote): ResumenLoteDto {
+  return {
+    totalPendientes: resumen.totalPendientes,
+    auditadas: resumen.auditadas,
+    fallidas: resumen.fallidas,
+    resultados: resumen.resultados.map(presentarResultadoAuditoria),
+    fallos: resumen.fallos.map((fallo) => ({ ...fallo })),
   };
 }
 

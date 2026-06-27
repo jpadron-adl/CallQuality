@@ -8,6 +8,7 @@ import {
   presentarResultadoAuditoria,
   presentarInformeAgente,
   presentarComparacionAuditorias,
+  presentarResumenLote,
 } from '@infrastructure/web/AuditoriaPresentador';
 import {
   registrarLlamadaSchema,
@@ -47,6 +48,11 @@ export class ApiAuditoria {
       const id = decodeURIComponent(coincidencia[1]!);
       if (peticion.metodo === 'POST') return this.auditarLlamada(id);
       if (peticion.metodo === 'GET') return this.listarAuditorias(id);
+      return this.metodoNoPermitido();
+    }
+
+    if (ruta === '/api/auditorias/lote') {
+      if (peticion.metodo === 'POST') return this.auditarLote();
       return this.metodoNoPermitido();
     }
 
@@ -136,6 +142,11 @@ export class ApiAuditoria {
   private async informeAgente(agenteId: string): Promise<RespuestaHttp> {
     const informe = await this.contexto.generarInformeAgente.ejecutar(agenteId);
     return { estado: 200, cuerpo: presentarInformeAgente(informe) };
+  }
+
+  private async auditarLote(): Promise<RespuestaHttp> {
+    const resumen = await this.contexto.auditarLote.ejecutar();
+    return { estado: 200, cuerpo: presentarResumenLote(resumen) };
   }
 
   private async compararAuditorias(idA: string, idB: string): Promise<RespuestaHttp> {
