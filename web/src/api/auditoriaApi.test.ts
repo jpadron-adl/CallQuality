@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { crearClienteAuditoria } from '@/api/auditoriaApi';
 import { ApiError } from '@/api/ApiError';
 import type {
+  ComparacionAuditoriasDto,
   InformeAgenteDto,
   LlamadaDto,
   NuevaLlamada,
@@ -137,6 +138,30 @@ describe('crearClienteAuditoria', () => {
       expect.objectContaining({ method: 'GET' }),
     );
     expect(resultado.puntuacionMedia).toBe(75);
+  });
+
+  it('compara dos auditorías con GET /api/auditorias/:idA/comparacion/:idB y codifica los ids', async () => {
+    const comparacion: ComparacionAuditoriasDto = {
+      llamadaId: 'llamada-1',
+      auditoriaIdA: 'a 1',
+      auditoriaIdB: 'a/2',
+      puntuacionA: 50,
+      puntuacionB: 100,
+      diferenciaPuntuacion: 50,
+      protocolosCambiados: [{ protocolo: 'DESPEDIDA', cumplidoA: false, cumplidoB: true }],
+      alertasAparecidas: [],
+      alertasDesaparecidas: [{ tipo: 'QUEJA_GRAVE', severidad: 'MEDIA' }],
+    };
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson(comparacion));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+
+    const resultado = await api.compararAuditorias('a 1', 'a/2');
+
+    expect(fetchFalso).toHaveBeenCalledWith(
+      '/api/auditorias/a%201/comparacion/a%2F2',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(resultado.diferenciaPuntuacion).toBe(50);
   });
 
   it('propaga un ApiError 400 cuando el alta es rechazada por la API', async () => {
