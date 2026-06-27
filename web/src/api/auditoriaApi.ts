@@ -6,6 +6,7 @@ import type {
   NuevaLlamada,
   NuevaRevision,
   ResultadoAuditoriaDto,
+  ResumenLoteDto,
 } from '@/api/tipos';
 
 /** Función `fetch` (inyectable para testear sin red ni dependencia del global). */
@@ -27,6 +28,7 @@ export interface ClienteAuditoria {
   revisarAuditoria(auditoriaId: string, revision: NuevaRevision): Promise<ResultadoAuditoriaDto>;
   obtenerInformeAgente(agenteId: string): Promise<InformeAgenteDto>;
   compararAuditorias(auditoriaIdA: string, auditoriaIdB: string): Promise<ComparacionAuditoriasDto>;
+  auditarLote(): Promise<ResumenLoteDto>;
 }
 
 /**
@@ -82,6 +84,9 @@ export function crearClienteAuditoria(opciones: OpcionesClienteAuditoria = {}): 
         `/api/auditorias/${encodeURIComponent(auditoriaIdA)}/comparacion/${encodeURIComponent(auditoriaIdB)}`,
         'GET',
       );
+    },
+    auditarLote() {
+      return pedir<ResumenLoteDto>('/api/auditorias/lote', 'POST');
     },
   };
 }

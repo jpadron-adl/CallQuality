@@ -119,6 +119,21 @@ export interface ComparacionAuditoriasDto {
   readonly alertasDesaparecidas: readonly AlertaComparadaDto[];
 }
 
+/** Llamada del lote cuya auditoría no pudo completarse, con el motivo del fallo. */
+export interface FalloAuditoriaLoteDto {
+  readonly llamadaId: string;
+  readonly motivo: string;
+}
+
+/** Resumen de una auditoría en lote, devuelto por `POST /api/auditorias/lote`. */
+export interface ResumenLoteDto {
+  readonly totalPendientes: number;
+  readonly auditadas: number;
+  readonly fallidas: number;
+  readonly resultados: readonly ResultadoAuditoriaDto[];
+  readonly fallos: readonly FalloAuditoriaLoteDto[];
+}
+
 /** Una corrección de un protocolo enviada al revisar una auditoría. */
 export interface CorreccionEntradaDto {
   readonly protocolo: string;
