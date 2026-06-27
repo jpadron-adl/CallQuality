@@ -1,5 +1,6 @@
 import { ApiError } from '@/api/ApiError';
 import type {
+  ComparacionAuditoriasDto,
   InformeAgenteDto,
   LlamadaDto,
   NuevaLlamada,
@@ -25,6 +26,7 @@ export interface ClienteAuditoria {
   registrarLlamada(nueva: NuevaLlamada): Promise<LlamadaDto>;
   revisarAuditoria(auditoriaId: string, revision: NuevaRevision): Promise<ResultadoAuditoriaDto>;
   obtenerInformeAgente(agenteId: string): Promise<InformeAgenteDto>;
+  compararAuditorias(auditoriaIdA: string, auditoriaIdB: string): Promise<ComparacionAuditoriasDto>;
 }
 
 /**
@@ -74,6 +76,12 @@ export function crearClienteAuditoria(opciones: OpcionesClienteAuditoria = {}): 
     },
     obtenerInformeAgente(agenteId) {
       return pedir<InformeAgenteDto>(`/api/agentes/${encodeURIComponent(agenteId)}/informe`, 'GET');
+    },
+    compararAuditorias(auditoriaIdA, auditoriaIdB) {
+      return pedir<ComparacionAuditoriasDto>(
+        `/api/auditorias/${encodeURIComponent(auditoriaIdA)}/comparacion/${encodeURIComponent(auditoriaIdB)}`,
+        'GET',
+      );
     },
   };
 }

@@ -90,6 +90,35 @@ export interface InformeAgenteDto {
   readonly alertasPorSeveridad: readonly AlertasPorSeveridadDto[];
 }
 
+/** Protocolo cuyo veredicto cambió entre dos auditorías comparadas. `null` si no se evaluó. */
+export interface ProtocoloCambiadoDto {
+  readonly protocolo: string;
+  readonly cumplidoA: boolean | null;
+  readonly cumplidoB: boolean | null;
+}
+
+/** Alerta presente en solo una de las auditorías comparadas. */
+export interface AlertaComparadaDto {
+  readonly tipo: string;
+  readonly severidad: string;
+}
+
+/**
+ * Comparación entre dos auditorías de la misma llamada, devuelta por
+ * `GET /api/auditorias/:idA/comparacion/:idB`. Refleja la valoración efectiva de cada una.
+ */
+export interface ComparacionAuditoriasDto {
+  readonly llamadaId: string;
+  readonly auditoriaIdA: string;
+  readonly auditoriaIdB: string;
+  readonly puntuacionA: number;
+  readonly puntuacionB: number;
+  readonly diferenciaPuntuacion: number;
+  readonly protocolosCambiados: readonly ProtocoloCambiadoDto[];
+  readonly alertasAparecidas: readonly AlertaComparadaDto[];
+  readonly alertasDesaparecidas: readonly AlertaComparadaDto[];
+}
+
 /** Una corrección de un protocolo enviada al revisar una auditoría. */
 export interface CorreccionEntradaDto {
   readonly protocolo: string;
