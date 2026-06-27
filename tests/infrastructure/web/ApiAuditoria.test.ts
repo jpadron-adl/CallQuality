@@ -5,6 +5,7 @@ import type {
   ResultadoAuditoriaDto,
   LlamadaDto,
   InformeAgenteDto,
+  ComparacionAuditoriasDto,
 } from '@infrastructure/web/AuditoriaPresentador';
 
 const crearApi = () => new ApiAuditoria(construirContexto({ modo: 'demo' }));
@@ -150,6 +151,37 @@ describe('ApiAuditoria', () => {
     expect(dto.numeroLlamadasAuditadas).toBe(1);
     expect(dto.puntuacionMedia).toBeGreaterThanOrEqual(0);
     expect(dto.puntuacionMedia).toBeLessThanOrEqual(100);
+  });
+
+  it('GET /api/auditorias/:idA/comparacion/:idB compara dos auditorías de la misma llamada', async () => {
+    const r1 = await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+    const r2 = await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+    const idA = (r1.cuerpo as ResultadoAuditoriaDto).id;
+    const idB = (r2.cuerpo as ResultadoAuditoriaDto).id;
+
+    const respuesta = await api.manejar({
+      metodo: 'GET',
+      ruta: `/api/auditorias/${idA}/comparacion/${idB}`,
+    });
+
+    expect(respuesta.estado).toBe(200);
+    const dto = respuesta.cuerpo as ComparacionAuditoriasDto;
+    expect(dto.llamadaId).toBe('llamada-001');
+    expect(dto.auditoriaIdA).toBe(idA);
+    expect(dto.auditoriaIdB).toBe(idB);
+    expect(typeof dto.diferenciaPuntuacion).toBe('number');
+  });
+
+  it('GET de comparación con una auditoría inexistente devuelve 404', async () => {
+    const r1 = await api.manejar({ metodo: 'POST', ruta: '/api/llamadas/llamada-001/auditorias' });
+    const idA = (r1.cuerpo as ResultadoAuditoriaDto).id;
+
+    const respuesta = await api.manejar({
+      metodo: 'GET',
+      ruta: `/api/auditorias/${idA}/comparacion/no-existe`,
+    });
+
+    expect(respuesta.estado).toBe(404);
   });
 
   it('devuelve 404 para una ruta desconocida', async () => {
