@@ -8,6 +8,7 @@ import type {
   NuevaLlamada,
   NuevaRevision,
   ResultadoAuditoriaDto,
+  ResumenLoteDto,
 } from '@/api/tipos';
 
 /** Construye una respuesta `fetch` falsa con cuerpo JSON y estado configurables. */
@@ -162,6 +163,26 @@ describe('crearClienteAuditoria', () => {
       expect.objectContaining({ method: 'GET' }),
     );
     expect(resultado.diferenciaPuntuacion).toBe(50);
+  });
+
+  it('audita el lote de pendientes con POST /api/auditorias/lote', async () => {
+    const resumen: ResumenLoteDto = {
+      totalPendientes: 2,
+      auditadas: 2,
+      fallidas: 0,
+      resultados: [RESULTADO],
+      fallos: [],
+    };
+    const fetchFalso = vi.fn().mockResolvedValue(respuestaJson(resumen));
+    const api = crearClienteAuditoria({ fetch: fetchFalso, baseUrl: '' });
+
+    const resultado = await api.auditarLote();
+
+    expect(fetchFalso).toHaveBeenCalledWith(
+      '/api/auditorias/lote',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(resultado.auditadas).toBe(2);
   });
 
   it('propaga un ApiError 400 cuando el alta es rechazada por la API', async () => {
