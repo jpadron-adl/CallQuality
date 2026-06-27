@@ -7,6 +7,7 @@ import {
   presentarLlamada,
   presentarResultadoAuditoria,
   presentarInformeAgente,
+  presentarComparacionAuditorias,
 } from '@infrastructure/web/AuditoriaPresentador';
 import {
   registrarLlamadaSchema,
@@ -20,6 +21,7 @@ import { AuditoriaNoEncontradaError } from '@application/shared/AuditoriaNoEncon
 
 const RUTA_AUDITORIAS = /^\/api\/llamadas\/([^/]+)\/auditorias$/;
 const RUTA_REVISION = /^\/api\/auditorias\/([^/]+)\/revision$/;
+const RUTA_COMPARACION = /^\/api\/auditorias\/([^/]+)\/comparacion\/([^/]+)$/;
 const RUTA_INFORME_AGENTE = /^\/api\/agentes\/([^/]+)\/informe$/;
 
 /**
@@ -52,6 +54,14 @@ export class ApiAuditoria {
     if (revision !== null) {
       const id = decodeURIComponent(revision[1]!);
       if (peticion.metodo === 'POST') return this.revisarAuditoria(id, peticion.cuerpo);
+      return this.metodoNoPermitido();
+    }
+
+    const comparacion = RUTA_COMPARACION.exec(ruta);
+    if (comparacion !== null) {
+      const idA = decodeURIComponent(comparacion[1]!);
+      const idB = decodeURIComponent(comparacion[2]!);
+      if (peticion.metodo === 'GET') return this.compararAuditorias(idA, idB);
       return this.metodoNoPermitido();
     }
 
@@ -126,6 +136,22 @@ export class ApiAuditoria {
   private async informeAgente(agenteId: string): Promise<RespuestaHttp> {
     const informe = await this.contexto.generarInformeAgente.ejecutar(agenteId);
     return { estado: 200, cuerpo: presentarInformeAgente(informe) };
+  }
+
+  private async compararAuditorias(idA: string, idB: string): Promise<RespuestaHttp> {
+    try {
+      const comparacion = await this.contexto.compararAuditorias.ejecutar(idA, idB);
+      return { estado: 200, cuerpo: presentarComparacionAuditorias(comparacion) };
+    } catch (error) {
+      if (error instanceof AuditoriaNoEncontradaError) {
+        return { estado: 404, cuerpo: { error: error.message } };
+      }
+      // El dominio rechaza comparar auditorías de llamadas distintas: error del cliente.
+      if (error instanceof DomainError) {
+        return { estado: 400, cuerpo: { error: error.message } };
+      }
+      throw error;
+    }
   }
 
   private async listarAuditorias(id: string): Promise<RespuestaHttp> {

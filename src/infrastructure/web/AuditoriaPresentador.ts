@@ -1,6 +1,7 @@
 import type { Llamada } from '@domain/llamada/Llamada';
 import type { ResultadoAuditoria } from '@domain/auditoria/ResultadoAuditoria';
 import type { InformeAgente } from '@domain/auditoria/InformeAgente';
+import type { ComparacionAuditorias } from '@domain/auditoria/ComparacionAuditorias';
 
 /** Representación serializable de una llamada para la API. */
 export interface LlamadaDto {
@@ -69,6 +70,32 @@ export interface InformeAgenteDto {
   readonly alertasPorSeveridad: AlertasPorSeveridadDto[];
 }
 
+/** Protocolo cuyo veredicto cambió entre dos auditorías comparadas. */
+export interface ProtocoloCambiadoDto {
+  readonly protocolo: string;
+  readonly cumplidoA: boolean | null;
+  readonly cumplidoB: boolean | null;
+}
+
+/** Alerta presente en solo una de las auditorías comparadas. */
+export interface AlertaComparadaDto {
+  readonly tipo: string;
+  readonly severidad: string;
+}
+
+/** Representación serializable de la comparación entre dos auditorías de una llamada. */
+export interface ComparacionAuditoriasDto {
+  readonly llamadaId: string;
+  readonly auditoriaIdA: string;
+  readonly auditoriaIdB: string;
+  readonly puntuacionA: number;
+  readonly puntuacionB: number;
+  readonly diferenciaPuntuacion: number;
+  readonly protocolosCambiados: ProtocoloCambiadoDto[];
+  readonly alertasAparecidas: AlertaComparadaDto[];
+  readonly alertasDesaparecidas: AlertaComparadaDto[];
+}
+
 /**
  * Presentadores: traducen los agregados del dominio a DTOs planos y serializables.
  * Aíslan la forma de la respuesta HTTP de la estructura interna del dominio, de modo
@@ -129,5 +156,21 @@ export function presentarInformeAgente(informe: InformeAgente): InformeAgenteDto
     protocolosMasIncumplidos: informe.protocolosMasIncumplidos.map((p) => ({ ...p })),
     totalAlertas: informe.totalAlertas,
     alertasPorSeveridad: informe.alertasPorSeveridad.map((a) => ({ ...a })),
+  };
+}
+
+export function presentarComparacionAuditorias(
+  comparacion: ComparacionAuditorias,
+): ComparacionAuditoriasDto {
+  return {
+    llamadaId: comparacion.llamadaId,
+    auditoriaIdA: comparacion.auditoriaIdA,
+    auditoriaIdB: comparacion.auditoriaIdB,
+    puntuacionA: comparacion.puntuacionA,
+    puntuacionB: comparacion.puntuacionB,
+    diferenciaPuntuacion: comparacion.diferenciaPuntuacion,
+    protocolosCambiados: comparacion.protocolosCambiados.map((p) => ({ ...p })),
+    alertasAparecidas: comparacion.alertasAparecidas.map((a) => ({ ...a })),
+    alertasDesaparecidas: comparacion.alertasDesaparecidas.map((a) => ({ ...a })),
   };
 }
