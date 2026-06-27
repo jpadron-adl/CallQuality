@@ -7,6 +7,14 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-06-27
+
+### Added
+- Auditoría en lote de las llamadas pendientes, desarrollada con TDD estricto (micro-commits rojo-verde-refactor) a través de todas las capas. Cierra el catálogo de casos de uso planificado. Permite auditar de una sola vez todas las llamadas que aún no tienen ninguna auditoría.
+  - Aplicación: caso de uso `AuditarLote` (comando) que determina las llamadas sin auditoría previa orquestando el `LlamadaRepository` y el `AuditoriaRepository` (sin acoplarlos) y delega cada auditoría individual en `AuditarLlamada`, reutilizando su lógica. Es **resiliente**: el fallo de una llamada no detiene el lote; se registra y se continúa. Devuelve un `ResumenLote` con el total de pendientes, las auditadas, las fallidas, las auditorías producidas y el detalle de los fallos.
+  - API HTTP: nueva ruta `POST /api/auditorias/lote` con su presentador (`ResumenLoteDto`); devuelve 200 con el resumen.
+  - Dashboard: cliente `auditarLote`, tipos `ResumenLoteDto`/`FalloAuditoriaLoteDto`, vista `ResumenLote` (recuento de procesadas, auditadas y fallidas, con el detalle de cada fallo), botón «Auditar pendientes» en el listado y el panel correspondiente en `App` (con recarga del listado al terminar).
+
 ## [0.15.0] - 2026-06-27
 
 ### Added
