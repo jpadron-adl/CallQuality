@@ -7,6 +7,15 @@ y este proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-06-27
+
+### Added
+- Comparación de dos auditorías de una misma llamada (read-side analítico), desarrollada con TDD estricto (micro-commits rojo-verde-refactor) a través de todas las capas. Permite contrastar una auditoría con una re-auditoría posterior para ver qué cambió.
+  - Dominio: read-model `ComparacionAuditorias.comparar(a, b)` que valida que ambas auditorías pertenecen a la misma llamada y, sobre su valoración efectiva (con las correcciones humanas ya incorporadas), calcula el delta de puntuación, los protocolos cuyo veredicto cambió y las alertas aparecidas o desaparecidas (por tipo).
+  - Aplicación: caso de uso `CompararAuditorias` (consulta de solo lectura) que recupera ambas auditorías por su identificador (`AuditoriaNoEncontradaError` si falta alguna).
+  - API HTTP: nueva ruta `GET /api/auditorias/:idA/comparacion/:idB` con su presentador (`ComparacionAuditoriasDto`); 404 si falta una auditoría y 400 si pertenecen a llamadas distintas.
+  - Dashboard: vista `ComparacionAuditorias` (delta de puntuación con su tono, protocolos con veredicto cambiado y alertas aparecidas/desaparecidas), selección de dos auditorías en el historial mediante casillas con un botón «Comparar» y el panel correspondiente en `App`.
+
 ## [0.14.0] - 2026-06-26
 
 ### Added
