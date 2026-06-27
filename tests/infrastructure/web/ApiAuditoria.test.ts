@@ -6,6 +6,7 @@ import type {
   LlamadaDto,
   InformeAgenteDto,
   ComparacionAuditoriasDto,
+  ResumenLoteDto,
 } from '@infrastructure/web/AuditoriaPresentador';
 
 const crearApi = () => new ApiAuditoria(construirContexto({ modo: 'demo' }));
@@ -182,6 +183,32 @@ describe('ApiAuditoria', () => {
     });
 
     expect(respuesta.estado).toBe(404);
+  });
+
+  it('POST /api/auditorias/lote audita las llamadas pendientes y devuelve el resumen', async () => {
+    const respuesta = await api.manejar({ metodo: 'POST', ruta: '/api/auditorias/lote' });
+
+    expect(respuesta.estado).toBe(200);
+    const dto = respuesta.cuerpo as ResumenLoteDto;
+    expect(dto.totalPendientes).toBeGreaterThanOrEqual(1);
+    expect(dto.auditadas).toBe(dto.totalPendientes);
+    expect(dto.fallidas).toBe(0);
+    expect(dto.resultados).toHaveLength(dto.auditadas);
+  });
+
+  it('un segundo lote no vuelve a auditar lo ya auditado', async () => {
+    await api.manejar({ metodo: 'POST', ruta: '/api/auditorias/lote' });
+
+    const respuesta = await api.manejar({ metodo: 'POST', ruta: '/api/auditorias/lote' });
+
+    const dto = respuesta.cuerpo as ResumenLoteDto;
+    expect(dto.totalPendientes).toBe(0);
+    expect(dto.auditadas).toBe(0);
+  });
+
+  it('rechaza con 405 un método no soportado en la ruta del lote', async () => {
+    const respuesta = await api.manejar({ metodo: 'GET', ruta: '/api/auditorias/lote' });
+    expect(respuesta.estado).toBe(405);
   });
 
   it('devuelve 404 para una ruta desconocida', async () => {
