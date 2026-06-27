@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { App } from '@/App';
 import { ApiError } from '@/api/ApiError';
 import type { ClienteAuditoria } from '@/api/auditoriaApi';
-import type { LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
+import type { ComparacionAuditoriasDto, LlamadaDto, ResultadoAuditoriaDto } from '@/api/tipos';
 
 const LLAMADAS: LlamadaDto[] = [
   { id: 'llamada-1', agenteId: 'agente-7', fechaInicio: '2026-06-20T09:05:00.000Z', numeroIntervenciones: 4 },
@@ -36,6 +36,17 @@ function clienteFalso(sobrescribir: Partial<ClienteAuditoria> = {}): ClienteAudi
       totalAlertas: 0,
       alertasPorSeveridad: [],
     }),
+    compararAuditorias: vi.fn().mockResolvedValue({
+      llamadaId: 'llamada-1',
+      auditoriaIdA: 'auditoria-1',
+      auditoriaIdB: 'auditoria-2',
+      puntuacionA: 75,
+      puntuacionB: 100,
+      diferenciaPuntuacion: 25,
+      protocolosCambiados: [],
+      alertasAparecidas: [],
+      alertasDesaparecidas: [],
+    } satisfies ComparacionAuditoriasDto),
     ...sobrescribir,
   };
 }
@@ -163,6 +174,23 @@ describe('App', () => {
     expect(cliente.obtenerInformeAgente).toHaveBeenCalledWith('agente-7');
     expect(await screen.findByText(/2 llamadas auditadas/i)).toBeInTheDocument();
     expect(screen.getByText('80 / 100')).toBeInTheDocument();
+  });
+
+  it('compara dos auditorías seleccionadas del historial y muestra el delta', async () => {
+    const segunda: ResultadoAuditoriaDto = { ...RESULTADO, id: 'auditoria-2', puntuacion: 100 };
+    const cliente = clienteFalso({
+      listarAuditorias: vi.fn().mockResolvedValue([RESULTADO, segunda]),
+    });
+    render(<App cliente={cliente} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /historial/i }));
+    const casillas = await screen.findAllByRole('checkbox');
+    await userEvent.click(casillas[0]!);
+    await userEvent.click(casillas[1]!);
+    await userEvent.click(screen.getByRole('button', { name: /comparar/i }));
+
+    expect(cliente.compararAuditorias).toHaveBeenCalledWith('auditoria-1', 'auditoria-2');
+    expect(await screen.findByText('+25')).toBeInTheDocument();
   });
 
   it('re-audita la llamada desde el historial y recarga el listado de auditorías', async () => {
