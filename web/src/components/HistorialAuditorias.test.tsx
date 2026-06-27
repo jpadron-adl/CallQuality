@@ -88,4 +88,33 @@ describe('HistorialAuditorias', () => {
     );
     expect(screen.getByRole('button', { name: /re-auditando/i })).toBeDisabled();
   });
+
+  it('no muestra controles de comparación si no se proporciona onComparar', () => {
+    render(<HistorialAuditorias auditorias={AUDITORIAS} />);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /comparar/i })).not.toBeInTheDocument();
+  });
+
+  it('invoca onComparar con las dos auditorías seleccionadas, la más antigua primero', async () => {
+    const onComparar = vi.fn();
+    render(<HistorialAuditorias auditorias={AUDITORIAS} onComparar={onComparar} />);
+
+    const casillas = screen.getAllByRole('checkbox');
+    await userEvent.click(casillas[1]!); // selecciona la segunda primero
+    await userEvent.click(casillas[0]!);
+    await userEvent.click(screen.getByRole('button', { name: /comparar/i }));
+
+    expect(onComparar).toHaveBeenCalledTimes(1);
+    expect(onComparar).toHaveBeenCalledWith('aud-1', 'aud-2');
+  });
+
+  it('mantiene deshabilitado el botón de comparar hasta que hay exactamente dos seleccionadas', async () => {
+    render(<HistorialAuditorias auditorias={AUDITORIAS} onComparar={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: /comparar/i })).toBeDisabled();
+    await userEvent.click(screen.getAllByRole('checkbox')[0]!);
+    expect(screen.getByRole('button', { name: /comparar/i })).toBeDisabled();
+    await userEvent.click(screen.getAllByRole('checkbox')[1]!);
+    expect(screen.getByRole('button', { name: /comparar/i })).toBeEnabled();
+  });
 });
